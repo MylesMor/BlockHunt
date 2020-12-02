@@ -1,0 +1,11 @@
+name: BlockShuffle
+version: 1.0.0
+author: MylesMor
+main: dev.mylesmor.blockshuffle.BlockShuffle
+api-version: 1.14
+commands:
+  blockshuffle:
+    description: Opens the BlockShuffle help menu.
+    aliases: [bs]
+  check:
+    description: Checks the block.

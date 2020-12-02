@@ -1,0 +1,13 @@
+dev\mylesmor\blockshuffle\game\Check.class
+dev\mylesmor\blockshuffle\BlockShuffle.class
+dev\mylesmor\blockshuffle\commands\Start.class
+dev\mylesmor\blockshuffle\data\Status.class
+dev\mylesmor\blockshuffle\game\BlockShuffleGame$1.class
+dev\mylesmor\blockshuffle\util\Util.class
+dev\mylesmor\blockshuffle\game\BlockShuffleGame$2.class
+dev\mylesmor\blockshuffle\util\Permissions.class
+dev\mylesmor\blockshuffle\game\BlockShuffleGame.class
+dev\mylesmor\blockshuffle\game\BlockShuffleBoard.class
+dev\mylesmor\blockshuffle\data\Blocks.class
+dev\mylesmor\blockshuffle\commands\Join.class
+dev\mylesmor\blockshuffle\commands\Commands.class
