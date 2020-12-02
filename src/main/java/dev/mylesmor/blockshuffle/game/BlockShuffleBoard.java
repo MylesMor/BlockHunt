@@ -104,16 +104,17 @@ public class BlockShuffleBoard {
         foundBoard.resetScores(scores.get("timeFound"));
         foundBoard.resetScores(scores.get("blockFound"));
         foundBoard.resetScores(scores.get("playersFound"));
-        String playersString = ChatColor.GRAY + "Players remaining: " + ChatColor.YELLOW + BlockShuffle.players.size();
-        Score players = o.getScore(playersString);
-        Score playersFound = o1.getScore(playersString);
-        playersFound.setScore(2);
-        players.setScore(2);
-        scores.replace("players",playersString);
-        scores.replace("playersFound", playersString);
 
 
-        if (BlockShuffle.status == Status.INGAME) {
+        if (BlockShuffle.game.getStatus() == Status.INGAME) {
+            String playersString = ChatColor.GRAY + "Players remaining: " + ChatColor.YELLOW + BlockShuffle.players.size();
+            Score players = o.getScore(playersString);
+            Score playersFound = o1.getScore(playersString);
+            playersFound.setScore(2);
+            players.setScore(2);
+            scores.replace("players",playersString);
+            scores.replace("playersFound", playersString);
+
             String blockString = ChatColor.GRAY + "Block: " + ChatColor.YELLOW + ChatColor.GOLD + BlockShuffle.game.getCurrentBlock();
             Score block = o.getScore(blockString);
             Score blockFound = o1.getScore(blockString);
@@ -149,6 +150,14 @@ public class BlockShuffleBoard {
             timeFound.setScore(1);
             block.setScore(5);
             blockFound.setScore(6);
+        } else {
+            String playersString = ChatColor.GRAY + "Players: " + ChatColor.YELLOW + BlockShuffle.players.size();
+            Score players = o.getScore(playersString);
+            Score playersFound = o1.getScore(playersString);
+            playersFound.setScore(2);
+            players.setScore(2);
+            scores.replace("players",playersString);
+            scores.replace("playersFound", playersString);
         }
     }
 

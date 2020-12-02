@@ -1,5 +1,6 @@
 package dev.mylesmor.blockshuffle.commands;
 
+import dev.mylesmor.blockshuffle.data.Status;
 import dev.mylesmor.blockshuffle.util.*;
 import dev.mylesmor.blockshuffle.BlockShuffle;
 import org.bukkit.Bukkit;
@@ -15,18 +16,20 @@ public class Start {
      * @param args Not required.
      */
     public static void start(Player p, String[] args) {
-        //TODO: Check whether the game has already started.
         if (p.hasPermission(Permissions.START)) {
-            if (BlockShuffle.players.size() >= 1) {
-                for (Player pl : Bukkit.getOnlinePlayers()) {
-                    if (!BlockShuffle.players.containsKey(pl)) {
-                        BlockShuffle.lostPlayers.put(p, 0);
-                        pl.setGameMode(GameMode.SPECTATOR);
+            if (BlockShuffle.game.getStatus() == Status.LOBBY) {
+                if (BlockShuffle.players.size() >= 1) {
+                    for (Player pl : Bukkit.getOnlinePlayers()) {
+                        if (!BlockShuffle.players.containsKey(pl)) {
+                            pl.setGameMode(GameMode.SPECTATOR);
+                        }
                     }
+                    BlockShuffle.game.start();
+                } else {
+                    Util.blockShuffleMessage(p, ChatColor.RED, "Not enough players to start the game!", null);
                 }
-                BlockShuffle.game.start();
             } else {
-
+                Util.blockShuffleMessage(p, ChatColor.RED, "A game is already in progress!", null);
             }
         } else {
             Util.blockShuffleMessage(p, ChatColor.RED, "You don't have permission to use this command!", null);

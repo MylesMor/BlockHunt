@@ -1,6 +1,7 @@
 package dev.mylesmor.blockshuffle.commands;
 
 import dev.mylesmor.blockshuffle.BlockShuffle;
+import dev.mylesmor.blockshuffle.data.Status;
 import dev.mylesmor.blockshuffle.game.BlockShuffleBoard;
 import dev.mylesmor.blockshuffle.util.*;
 import org.bukkit.Bukkit;
@@ -20,7 +21,7 @@ public class Join {
                 BlockShuffle.board = new BlockShuffleBoard();
                 BlockShuffle.board.setPlayerBoard(p);
             }
-            if (!BlockShuffle.players.containsKey(p) && !BlockShuffle.lostPlayers.containsKey(p)) {
+            if (!BlockShuffle.players.containsKey(p)) {
                 BlockShuffle.players.put(p, false);
                 BlockShuffle.board.updateBoard();
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
@@ -30,7 +31,9 @@ public class Join {
                 if (BlockShuffle.players.containsKey(p)) {
                     Util.blockShuffleMessage(p, ChatColor.RED, "You are already in a game!", null);
                 } else {
-                    Util.blockShuffleMessage(p, ChatColor.RED, "Sorry, you're already out!", null);
+                    if (BlockShuffle.game.getStatus() == Status.INGAME) {
+                        Util.blockShuffleMessage(p, ChatColor.RED, "Sorry, you're already out!", null);
+                    }
                 }
             }
         } else {

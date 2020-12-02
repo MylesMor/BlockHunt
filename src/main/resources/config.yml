@@ -1,0 +1,13 @@
+# disabled_blocks and number_of_blocks only apply if random_blocks is set to true.
+round_time: 30
+random_order: true
+blocks:
+  - GRASS_BLOCK
+  - STONE
+  - COBBLESTONE
+random_blocks: false
+number_of_blocks: 10
+disabled_blocks:
+  - END_CRYSTAL
+  - BARRIER
+  - COMMAND_BLOCK
