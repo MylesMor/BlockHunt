@@ -19,7 +19,7 @@ public class RandomBlocks extends Blocks {
             }
         }
         Collections.shuffle(allBlocks);
-        blockList = (ArrayList<Material>) allBlocks.subList(0, numberOfBlocks);
+        blockList = new ArrayList(allBlocks.subList(0, numberOfBlocks));
     }
 
     public ArrayList<Material> getBlocks() {

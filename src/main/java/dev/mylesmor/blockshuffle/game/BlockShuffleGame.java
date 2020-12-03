@@ -162,7 +162,8 @@ public class BlockShuffleGame {
     public void verifyBlock(Player p) {
         Material matToFind = currentBlock;
         Material m = p.getPlayer().getLocation().getBlock().getRelative(BlockFace.DOWN).getType();
-        if (m.toString().equals(matToFind.toString())) {
+        Material halfBlock = p.getPlayer().getLocation().getBlock().getType();
+        if (m.toString().equals(matToFind.toString()) || halfBlock.toString().equals(halfBlock.toString())) {
             p.sendTitle(ChatColor.GREEN + "You've found the block!", "", 10, 70, 20);
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 5, 3);
             Util.blockShuffleMessage(p, ChatColor.GREEN, "Well done! Now continue mining and gathering materials until your next block!", null);
