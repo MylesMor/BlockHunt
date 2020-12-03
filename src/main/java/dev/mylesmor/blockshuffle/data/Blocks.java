@@ -13,7 +13,7 @@ public class Blocks {
 
     public Blocks(ArrayList<String> blocks, boolean randomOrder) {
         for (String block : blocks) {
-            Material m = Material.getMaterial(block);
+            Material m = Material.getMaterial(block.toUpperCase());
             if (m != null) {
                 this.blocks.add(m);
             } else {

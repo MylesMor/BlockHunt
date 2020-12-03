@@ -53,7 +53,9 @@ public class ConfigManager {
     }
 
     public ArrayList<String> getDisabledBlocks() {
-        return (ArrayList<String>) config.getStringList("disabled_blocks");
+        ArrayList<String> disabledBlocks = (ArrayList<String>) config.getStringList("disabled_blocks");
+        disabledBlocks.replaceAll(String::toUpperCase);
+        return disabledBlocks;
     }
 
     public boolean getRandomBlocks() {
