@@ -11,10 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class BlockShuffleGame {
 
@@ -27,14 +24,25 @@ public class BlockShuffleGame {
     private int timeRemaining;
     private int timeRemainingTaskID;
 
+    private int worldborder;
+    private ArrayList<World> worlds;
+    private World nether;
+    private World end;
+    private Location spawnLoc;
+    private int spawnRadius;
+
     private ArrayList<Player> lastPlayers = new ArrayList<>();
 
     /**
      * Constructor for creating a new game of BlockShuffle.
      * @param time The time for each round.
      */
-    public BlockShuffleGame(ArrayList<Material> blocks, int time) {
+    public BlockShuffleGame(ArrayList<Material> blocks, int time, int worldborder, ArrayList<World> worlds, Location spawnLoc, int spawnRadius) {
+        this.worlds = worlds;
+        this.spawnLoc = spawnLoc;
+        this.spawnRadius = spawnRadius;
         status = Status.LOBBY;
+        this.worldborder = worldborder;
         this.timeEachRound = time;
         this.timeRemaining = time / 20;
         this.blocks = blocks;
@@ -63,8 +71,34 @@ public class BlockShuffleGame {
         for (Player p : BlockShuffle.players.keySet()) {
             BlockShuffle.scores.put(p, 0);
         }
+        setupWorldBorder();
+        teleportPlayers();
         BlockShuffle.game.setStatus(Status.INGAME);
         chooseNextBlock();
+    }
+
+    /**
+     * Teleports players to a random location inside the spawnRadius from spawnLoc.
+     */
+    public void teleportPlayers() {
+        World spawnWorld = spawnLoc.getWorld();
+        Random r = new Random();
+        for (Player p : BlockShuffle.players.keySet()) {
+            int x = r.nextInt(spawnRadius - (-spawnRadius)) + -spawnRadius + (int) spawnLoc.getX();
+            int z = r.nextInt(spawnRadius - (-spawnRadius)) + -spawnRadius + (int) spawnLoc.getZ();
+            p.teleport(spawnWorld.getHighestBlockAt(x, z).getLocation().add(0, 1, 0));
+        }
+    }
+
+    /**
+     * Sets up WorldBorder for game.
+     */
+    public void setupWorldBorder() {
+        for (World w : worlds) {
+            WorldBorder wb = w.getWorldBorder();
+            wb.setCenter(spawnLoc);
+            wb.setSize(worldborder);
+        }
     }
 
     /**

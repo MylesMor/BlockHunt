@@ -1,10 +1,22 @@
 # disabled_blocks and number_of_blocks only apply if random_blocks is set to true.
+world_name: world
+nether_world_name: world_nether
+end_world_name: world_the_end
+worldborder_diameter: 500
+default_game_world_name: world
+spawn_location:
+  x: 0
+  y: 64
+  z: 0
+spawn_radius: 10
+
 round_time: 30
 random_order: true
 blocks:
   - GRASS_BLOCK
   - STONE
   - COBBLESTONE
+
 random_blocks: false
 number_of_blocks: 10
 disabled_blocks:
