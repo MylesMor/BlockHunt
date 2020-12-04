@@ -2,7 +2,6 @@ package dev.mylesmor.blockshuffle.commands;
 
 import dev.mylesmor.blockshuffle.BlockShuffle;
 import dev.mylesmor.blockshuffle.data.Status;
-import dev.mylesmor.blockshuffle.game.BlockShuffleBoard;
 import dev.mylesmor.blockshuffle.util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -17,13 +16,9 @@ public class Join {
      */
     public static void join(Player p, String[] args) {
         if (p.hasPermission(Permissions.JOIN)) {
-            if (BlockShuffle.players.size() == 0) {
-                BlockShuffle.board = new BlockShuffleBoard();
-                BlockShuffle.board.setPlayerBoard(p);
-            }
             if (!BlockShuffle.players.containsKey(p)) {
                 BlockShuffle.players.put(p, false);
-                BlockShuffle.board.updateBoard();
+                BlockShuffle.board.setScoreboard(p);
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                     Util.blockShuffleMessage(onlinePlayer, ChatColor.GRAY, ChatColor.GOLD + p.getName() + ChatColor.GRAY + " joined the game! There are now " + ChatColor.YELLOW + BlockShuffle.players.size() + ChatColor.GRAY + " player(s).", null);
                 }

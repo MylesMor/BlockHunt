@@ -20,7 +20,11 @@ public class Check implements CommandExecutor {
         if ((sender instanceof Player)) {
             final Player p = (Player) sender;
             if (BlockShuffle.players.containsKey(p)) {
-                BlockShuffle.game.verifyBlock(p);
+                if (!BlockShuffle.players.get(p)) {
+                    BlockShuffle.game.verifyBlock(p);
+                } else {
+                    Util.blockShuffleMessage(p, ChatColor.RED, "You've already found your block for this round!", null);
+                }
             }
         }
         return true;

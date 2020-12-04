@@ -11,25 +11,29 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.Instant;
 import java.util.*;
 
 public class BlockShuffleGame {
 
     private Status status;
     private ArrayList<Material> blocks;
-    private int position = 0;
+    private int round = 0;
+    private int blockNumber = 0;
     private Material currentBlock = null;
 
     private int timeEachRound;
     private int timeRemaining;
     private int timeRemainingTaskID;
+    private int endOfRoundTask;
 
     private int worldborder;
     private ArrayList<World> worlds;
-    private World nether;
-    private World end;
     private Location spawnLoc;
     private int spawnRadius;
+
+    private int maxNumberRounds = 10;
+    private boolean elimination = false;
 
     private ArrayList<Player> lastPlayers = new ArrayList<>();
 
@@ -37,7 +41,10 @@ public class BlockShuffleGame {
      * Constructor for creating a new game of BlockShuffle.
      * @param time The time for each round.
      */
-    public BlockShuffleGame(ArrayList<Material> blocks, int time, int worldborder, ArrayList<World> worlds, Location spawnLoc, int spawnRadius) {
+    public BlockShuffleGame(ArrayList<Material> blocks, int time, int worldborder, ArrayList<World> worlds,
+                            Location spawnLoc, int spawnRadius, int maxNumberRounds, boolean elimination) {
+        this.elimination = elimination;
+        this.maxNumberRounds = maxNumberRounds;
         this.worlds = worlds;
         this.spawnLoc = spawnLoc;
         this.spawnRadius = spawnRadius;
@@ -46,6 +53,7 @@ public class BlockShuffleGame {
         this.timeEachRound = time;
         this.timeRemaining = time / 20;
         this.blocks = blocks;
+        this.round = this.blockNumber;
     }
 
     public Material getCurrentBlock() {
@@ -64,6 +72,12 @@ public class BlockShuffleGame {
         this.status = status;
     }
 
+    public boolean getElimination() { return elimination; }
+
+    public int getRound() { return round; }
+
+    public int getMaxNumberRounds() { return maxNumberRounds; }
+
     /**
      * Starts a game of BlockShuffle.
      */
@@ -74,7 +88,7 @@ public class BlockShuffleGame {
         setupWorldBorder();
         teleportPlayers();
         BlockShuffle.game.setStatus(Status.INGAME);
-        chooseNextBlock();
+        chooseNextBlock(false);
     }
 
     /**
@@ -84,6 +98,7 @@ public class BlockShuffleGame {
         World spawnWorld = spawnLoc.getWorld();
         Random r = new Random();
         for (Player p : BlockShuffle.players.keySet()) {
+            p.setGameMode(GameMode.SURVIVAL);
             int x = r.nextInt(spawnRadius - (-spawnRadius)) + -spawnRadius + (int) spawnLoc.getX();
             int z = r.nextInt(spawnRadius - (-spawnRadius)) + -spawnRadius + (int) spawnLoc.getZ();
             p.teleport(spawnWorld.getHighestBlockAt(x, z).getLocation().add(0, 1, 0));
@@ -104,25 +119,31 @@ public class BlockShuffleGame {
     /**
      * Chooses the next block to find.
      */
-    public void chooseNextBlock() {
-        BlockShuffle.players.replaceAll( (k, v)->v=false);
-        currentBlock = blocks.get(position);
+    public void chooseNextBlock(boolean skipped) {
+        blockNumber++;
+        if (round > maxNumberRounds-1) {
+            endGame();
+            return;
+        }
+        if (!skipped) {
+            round++;
+        }
+        BlockShuffle.players.replaceAll((k, v)->v=false);
+        currentBlock = blocks.get(blockNumber);
         for (Player p : BlockShuffle.players.keySet()) {
             // Updates player scoreboard and sends the message/title
-            BlockShuffle.board.setPlayerBoard(p);
             p.sendTitle(ChatColor.GRAY + "Choosing next block...", ChatColor.YELLOW + currentBlock.toString().replace("_", " "), 10, 70, 20);
             Util.blockShuffleMessage(p, ChatColor.GRAY, "Stand on " + ChatColor.YELLOW + ChatColor.BOLD + currentBlock.toString().replace("_", " ") + ChatColor.GRAY + " and type /check", null);
         }
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!BlockShuffle.players.containsKey(p)) {
-                BlockShuffle.board.setPlayerBoard(p);
+                //TODO Add spectator scoreboard
                 Util.blockShuffleMessage(p, ChatColor.GRAY, "The players now need to find: " + ChatColor.YELLOW + ChatColor.BOLD + currentBlock.toString().replace("_", " "), null);
             }
         }
         timeRemaining = timeEachRound / 20;
         calculateTime();
         scheduleElimination();
-        position++;
     }
 
     /**
@@ -150,7 +171,6 @@ public class BlockShuffleGame {
                     }
                 }
                 timeRemaining--;
-                BlockShuffle.board.updateBoard();
             }
         }, 0, 20);
     }
@@ -163,17 +183,19 @@ public class BlockShuffleGame {
         Material matToFind = currentBlock;
         Material m = p.getPlayer().getLocation().getBlock().getRelative(BlockFace.DOWN).getType();
         Material halfBlock = p.getPlayer().getLocation().getBlock().getType();
-        if (m.toString().equals(matToFind.toString()) || halfBlock.toString().equals(halfBlock.toString())) {
+        if (m.toString().equals(matToFind.toString()) || halfBlock.toString().equals(matToFind.toString())) {
             p.sendTitle(ChatColor.GREEN + "You've found the block!", "", 10, 70, 20);
-            p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 5, 3);
+            p.playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1f, 1f);
             Util.blockShuffleMessage(p, ChatColor.GREEN, "Well done! Now continue mining and gathering materials until your next block!", null);
             BlockShuffle.players.replace(p, true);
             int score = BlockShuffle.scores.get(p);
             BlockShuffle.scores.replace(p, 1000 + timeRemaining + score);
-            BlockShuffle.board.setFoundBoard(p);
         } else {
             p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_BREAK, 10, 3);
-            Util.blockShuffleMessage(p, ChatColor.RED, "That is not the correct block! You are standing on " + ChatColor.GOLD + m.toString().replace("_", " ") + ChatColor.RED + ". You need to stand on: " + ChatColor.GREEN + matToFind.toString().replace("_", " ") + ChatColor.RED + ".", null);
+            Util.blockShuffleMessage(p, ChatColor.RED, "That is not the correct block! " + ChatColor.GRAY
+                    + "You are standing on " + ChatColor.RED + m.toString().replace("_", " ")
+                    + ChatColor.GRAY + ". You need to stand on: " + ChatColor.YELLOW + ChatColor.BOLD
+                    + matToFind.toString().replace("_", " ") + ChatColor.GRAY + ".", null);
         }
     }
 
@@ -181,28 +203,31 @@ public class BlockShuffleGame {
      * Schedules the end of each round, determining eliminations and whether the game is over.
      */
     public void scheduleElimination() {
-        Bukkit.getScheduler().scheduleSyncDelayedTask(BlockShuffle.plugin, new Runnable() {
+        endOfRoundTask = Bukkit.getScheduler().scheduleSyncDelayedTask(BlockShuffle.plugin, new Runnable() {
             @Override
             public void run() {
                 Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
                 // Determines whether all the remaining players have failed at this block
-                if (!checkIfAllOut()) {
-                    lastPlayers.clear();
-                    // Eliminates players who have failed
-                    checkElimination();
-                    // Determine if one player remaining
-                    if (BlockShuffle.players.size() == 1) {
-                        for (Map.Entry<Player, Boolean> entry : BlockShuffle.players.entrySet()) {
-                            lastPlayers.add(entry.getKey());
+                if (elimination) {
+                    if (!checkIfAllOut()) {
+                        lastPlayers.clear();
+                        // Eliminates players who have failed
+                        checkElimination();
+                        // Determine if one player remaining
+                        if (BlockShuffle.players.size() == 1) {
+                            for (Map.Entry<Player, Boolean> entry : BlockShuffle.players.entrySet()) {
+                                lastPlayers.add(entry.getKey());
+                            }
+                            endGame();
+                        } else {
+                            // Continue the game
+                            chooseNextBlock(false);
                         }
-                        endGame();
                     } else {
-                        // Continue the game
-                        chooseNextBlock();
-                        BlockShuffle.board.updateBoard();
+                        endGame();
                     }
                 } else {
-                    endGame();
+                    chooseNextBlock(false);
                 }
             }
         }, this.timeEachRound);
@@ -222,19 +247,25 @@ public class BlockShuffleGame {
         for (Map.Entry<Player, Integer> entry : BlockShuffle.scores.entrySet()) {
             if (!entry.equals(maxEntry)) {
                 Player player = entry.getKey();
-                player.sendTitle(ChatColor.RED + "Eliminated!", "", 10, 70, 20);
-                player.setGameMode(GameMode.SPECTATOR);
-                player.getWorld().strikeLightningEffect(player.getLocation());
-                player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 3, 3);
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.GOLD + player.getName() + ChatColor.RED + " has been eliminated! " + ChatColor.YELLOW + (BlockShuffle.players.size()-1) + ChatColor.GRAY + " player(s) remain.", null);
+                if (elimination) {
+                    player.sendTitle(ChatColor.RED + "Eliminated!", "", 10, 70, 20);
+                    player.setGameMode(GameMode.SPECTATOR);
+                    player.getWorld().strikeLightningEffect(player.getLocation());
+                    player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1, 1);
+                } else {
+                    player.sendTitle(ChatColor.RED + "Game over!", "", 10, 70, 20);
+                    player.setGameMode(GameMode.SPECTATOR);
                 }
-                BlockShuffle.board.updateBoard();
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (elimination) {
+                        Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.GOLD + player.getName() + ChatColor.RED + " has been eliminated! " + ChatColor.YELLOW + (BlockShuffle.players.size()-1) + ChatColor.GRAY + " player(s) remain.", null);
+                    }
+                }
             }
         }
         Player winner = maxEntry.getKey();
         winner.sendTitle(ChatColor.GREEN + "Winner!", "", 10, 70, 20);
-        winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 5, 3);
+        winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.5f, 2f);
         winner.setGameMode(GameMode.SPECTATOR);
         for (Player p : Bukkit.getOnlinePlayers()) {
             Util.blockShuffleMessage(p, ChatColor.GRAY, "The game is now over! " + ChatColor.GREEN + "Winner: %NAME%", winner.getName());
@@ -248,7 +279,7 @@ public class BlockShuffleGame {
      */
     public void saveScores() {
         try {
-            File file = new File(BlockShuffle.plugin.getDataFolder() + "/scores.csv");
+            File file = new File(BlockShuffle.plugin.getDataFolder() + "/scores" + Instant.now().getEpochSecond() + ".csv");
             if (file.createNewFile()) {
                 Bukkit.getLogger().info("[BLOCKSHUFFLE] File created: " + file.getName());
             }
@@ -276,6 +307,12 @@ public class BlockShuffleGame {
                 Bukkit.getLogger().warning("[BLOCKSHUFFLE] Failed to write scores to scores.csv!");
             }
         }
+    }
+
+    public void skip() {
+        Bukkit.getScheduler().cancelTask(endOfRoundTask);
+        Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
+        chooseNextBlock(true);
     }
 
     /**
@@ -318,7 +355,6 @@ public class BlockShuffleGame {
                     Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.GOLD + player.getName() + ChatColor.RED + " has been eliminated! " + ChatColor.YELLOW + (BlockShuffle.players.size()-1) + ChatColor.GRAY + " player(s) remain.", null);
                 }
                 iter.remove();
-                BlockShuffle.board.updateBoard();
             }
         }
     }

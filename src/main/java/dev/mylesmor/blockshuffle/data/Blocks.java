@@ -6,18 +6,23 @@ import org.bukkit.block.Block;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 public class Blocks {
 
     private ArrayList<Material> blocks = new ArrayList<>();
 
-    public Blocks(ArrayList<String> blocks, boolean randomOrder) {
+    public Blocks(HashMap<String, ArrayList<Material>> groups, ArrayList<String> blocks, boolean randomOrder) {
         for (String block : blocks) {
-            Material m = Material.getMaterial(block.toUpperCase());
-            if (m != null) {
-                this.blocks.add(m);
+            if (groups.containsKey(block)) {
+                this.blocks.addAll(groups.get(block));
             } else {
-                Bukkit.getLogger().warning("[BLOCKSHUFFLE] Material " + block + " is invalid! Skipping...");
+                Material m = Material.getMaterial(block.toUpperCase());
+                if (m != null && !this.blocks.contains(m) && m.isBlock()) {
+                        this.blocks.add(m);
+                } else {
+                    Bukkit.getLogger().warning("[BLOCKSHUFFLE] Material " + block + " is invalid! Skipping...");
+                }
             }
         }
         if (randomOrder) {

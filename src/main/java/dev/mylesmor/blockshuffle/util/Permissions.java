@@ -8,4 +8,6 @@ package dev.mylesmor.blockshuffle.util;
 public final class Permissions {
     public static final String JOIN = "blockshuffle.join";
     public static final String START = "blockshuffle.start";
+    public static final String SKIP = "blockshuffle.skip";
+
 }

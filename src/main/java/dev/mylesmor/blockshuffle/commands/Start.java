@@ -1,6 +1,7 @@
 package dev.mylesmor.blockshuffle.commands;
 
 import dev.mylesmor.blockshuffle.data.Status;
+import dev.mylesmor.blockshuffle.game.BlockShuffleGame;
 import dev.mylesmor.blockshuffle.util.*;
 import dev.mylesmor.blockshuffle.BlockShuffle;
 import org.bukkit.Bukkit;
@@ -17,19 +18,32 @@ public class Start {
      */
     public static void start(Player p, String[] args) {
         if (p.hasPermission(Permissions.START)) {
-            if (BlockShuffle.game.getStatus() == Status.LOBBY) {
-                if (BlockShuffle.players.size() >= 1) {
-                    for (Player pl : Bukkit.getOnlinePlayers()) {
-                        if (!BlockShuffle.players.containsKey(pl)) {
-                            pl.setGameMode(GameMode.SPECTATOR);
+            if (args != null) {
+                if (args.length == 1) {
+                    BlockShuffle.game = BlockShuffle.games.get(args[0].toLowerCase());
+                    if (BlockShuffle.game != null) {
+                        if (BlockShuffle.game.getStatus() == Status.LOBBY) {
+                            if (BlockShuffle.players.size() >= 1) {
+                                for (Player pl : Bukkit.getOnlinePlayers()) {
+                                    if (!BlockShuffle.players.containsKey(pl)) {
+                                        pl.setGameMode(GameMode.SPECTATOR);
+                                    }
+                                }
+                                BlockShuffle.game.start();
+                            } else {
+                                Util.blockShuffleMessage(p, ChatColor.RED, "Not enough players to start the game!", null);
+                            }
+                        } else {
+                            Util.blockShuffleMessage(p, ChatColor.RED, "A game is already in progress!", null);
                         }
+                    } else {
+                        Util.blockShuffleMessage(p, ChatColor.RED, "Incorrect command usage. Correct usage: " + ChatColor.LIGHT_PURPLE + "/bs start <preset>", null);
                     }
-                    BlockShuffle.game.start();
                 } else {
-                    Util.blockShuffleMessage(p, ChatColor.RED, "Not enough players to start the game!", null);
+                    Util.blockShuffleMessage(p, ChatColor.RED, "This preset was not found in the config!", null);
                 }
             } else {
-                Util.blockShuffleMessage(p, ChatColor.RED, "A game is already in progress!", null);
+                Util.blockShuffleMessage(p, ChatColor.RED, "Incorrect command usage. Correct usage: " + ChatColor.LIGHT_PURPLE + "/bs start <preset>", null);
             }
         } else {
             Util.blockShuffleMessage(p, ChatColor.RED, "You don't have permission to use this command!", null);

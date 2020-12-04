@@ -19,6 +19,7 @@ public class Commands implements CommandExecutor {
     public Commands() {
         commands.put("join", Join::join);
         commands.put("start", Start::start);
+        commands.put("skip", Skip::skip);
     }
 
     @Override

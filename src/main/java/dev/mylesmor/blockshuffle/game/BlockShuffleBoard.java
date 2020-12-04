@@ -1,173 +1,114 @@
 package dev.mylesmor.blockshuffle.game;
 
 import dev.mylesmor.blockshuffle.BlockShuffle;
-import dev.mylesmor.blockshuffle.data.Status;
+import dev.mylesmor.blockshuffle.util.ScoreboardSign;
 import dev.mylesmor.blockshuffle.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.*;
+import org.bukkit.scoreboard.Scoreboard;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class BlockShuffleBoard {
 
-    Scoreboard board = null;
-    Scoreboard foundBoard = null;
-    HashMap<String, String> scores = new HashMap<>();
+    public HashMap<Player, ScoreboardSign> boards = new HashMap<>();
 
     public BlockShuffleBoard() {
-        createScoreboard();
+        updateScoreboard();
+    };
+
+
+    public void setScoreboard(Player p) {
+        ScoreboardSign sb = new ScoreboardSign(p, Util.prefix);
+        sb.create();
+        sb.setLine(1, " ");
+        boards.put(p, sb);
     }
 
-    public void createScoreboard() {
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
-        Scoreboard newScoreboard = manager.getNewScoreboard();
-        Scoreboard newFoundScoreboard = manager.getNewScoreboard();
-
-        Objective o;
-        Objective o1;
-
-        o = newScoreboard.registerNewObjective("BlockShuffle", "", Util.prefix);
-        o1 = newFoundScoreboard.registerNewObjective("BlockShuffle", "", Util.prefix);
-
-        o.setDisplaySlot(DisplaySlot.SIDEBAR);
-        o.setDisplayName(Util.prefix);
-
-        o1.setDisplaySlot(DisplaySlot.SIDEBAR);
-        o1.setDisplayName(Util.prefix);
-
-
-        String playersString = ChatColor.GRAY + "Players: " + ChatColor.YELLOW + BlockShuffle.players.size();
-        String timeString = ChatColor.GRAY + "Time remaining: ";
-        String blockString = ChatColor.GRAY + "Block: " + ChatColor.YELLOW + ChatColor.GOLD;
-        String foundString = "" + ChatColor.GREEN + ChatColor.BOLD + "FOUND!";
-
-        Score players = o.getScore(playersString);
-        Score time = o.getScore(timeString);
-        Score block = o.getScore(blockString);
-        Score blank = o.getScore("");
-        Score blank1 = o.getScore(" ");
-        Score blank2 = o.getScore("  ");
-        Score blank3 = o.getScore("   ");
-
-        Score playersFound = o1.getScore(playersString);
-        Score timeFound = o1.getScore(timeString);
-        Score blockFound = o1.getScore(blockString);
-        Score found = o1.getScore(foundString);
-        Score blankFound = o1.getScore("");
-        Score blank1Found = o1.getScore(" ");
-        Score blank2Found = o1.getScore("  ");
-        Score blank3Found = o1.getScore("   ");
-
-        time.setScore(1);
-        players.setScore(2);
-        blank.setScore(3);
-        blank1.setScore(4);
-        block.setScore(5);
-        blank2.setScore(6);
-        blank3.setScore(7);
-
-        timeFound.setScore(1);
-        playersFound.setScore(2);
-        blankFound.setScore(3);
-        blank1Found.setScore(4);
-        found.setScore(5);
-        blockFound.setScore(6);
-        blank2Found.setScore(7);
-        blank3Found.setScore(8);
-
-        scores.put("players", playersString);
-        scores.put("time", timeString);
-        scores.put("block", blockString);
-        scores.put("found", foundString);
-        scores.put("playersFound", playersString);
-        scores.put("timeFound", timeString);
-        scores.put("blockFound", blockString);
-
-
-        this.board = newScoreboard;
-        this.foundBoard = newFoundScoreboard;
-    }
-
-    public void updateBoard() {
-        Objective o = board.getObjective("BlockShuffle");
-        Objective o1 = foundBoard.getObjective("BlockShuffle");
-
-        board.resetScores(scores.get("players"));
-        board.resetScores(scores.get("time"));
-        board.resetScores(scores.get("block"));
-        foundBoard.resetScores(scores.get("timeFound"));
-        foundBoard.resetScores(scores.get("blockFound"));
-        foundBoard.resetScores(scores.get("playersFound"));
-
-
-        if (BlockShuffle.game.getStatus() == Status.INGAME) {
-            String playersString = ChatColor.GRAY + "Players remaining: " + ChatColor.YELLOW + BlockShuffle.players.size();
-            Score players = o.getScore(playersString);
-            Score playersFound = o1.getScore(playersString);
-            playersFound.setScore(2);
-            players.setScore(2);
-            scores.replace("players",playersString);
-            scores.replace("playersFound", playersString);
-
-            String blockString = ChatColor.GRAY + "Block: " + ChatColor.YELLOW + ChatColor.GOLD + BlockShuffle.game.getCurrentBlock();
-            Score block = o.getScore(blockString);
-            Score blockFound = o1.getScore(blockString);
-
-            scores.replace("block", blockString);
-            scores.replace("blockFound", blockString);
-
-            Score time;
-            Score timeFound;
-            int minute = (int) TimeUnit.SECONDS.toMinutes(BlockShuffle.game.getTimeRemaining());
-            int second = BlockShuffle.game.getTimeRemaining() - (minute*60);
-            if (minute > 3) {
-                String timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.GREEN + "%02d:%02d", minute, second);
-                time = o.getScore(timeString);
-                timeFound = o1.getScore(timeString);
-                scores.replace("time", timeString);
-                scores.put("timeFound", timeString);
-            } else if (minute > 0 && minute < 3) {
-                String timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.YELLOW + "%02d:%02d", minute, second);
-                time = o.getScore(timeString);
-                timeFound = o1.getScore(timeString);
-                scores.replace("time", timeString);
-                scores.put("timeFound", timeString);
-
-            } else {
-                String timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.RED + "%02d:%02d", minute, second);
-                time = o.getScore(timeString);
-                timeFound = o1.getScore(timeString);
-                scores.replace("time", timeString);
-                scores.put("timeFound", timeString);
-            }
-            time.setScore(1);
-            timeFound.setScore(1);
-            block.setScore(5);
-            blockFound.setScore(6);
-        } else {
-            String playersString = ChatColor.GRAY + "Players: " + ChatColor.YELLOW + BlockShuffle.players.size();
-            Score players = o.getScore(playersString);
-            Score playersFound = o1.getScore(playersString);
-            playersFound.setScore(2);
-            players.setScore(2);
-            scores.replace("players",playersString);
-            scores.replace("playersFound", playersString);
+    public void destroyBoards() {
+        for (Map.Entry<Player, ScoreboardSign> entry : boards.entrySet()) {
+            entry.getValue().destroy();
         }
     }
 
-    public void setPlayerBoard(Player p) {
-        p.setScoreboard(board);
+    public void updateScoreboard() {
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
+            @Override
+            public void run() {
+                for (Map.Entry<Player, ScoreboardSign> entry : boards.entrySet()) {
+                    ScoreboardSign sb = entry.getValue();
+                    //TODO Add spectator scoreboard
+                    if (BlockShuffle.game != null) {
+                        sb.setLine(12, ChatColor.GRAY + "Round: " + ChatColor.YELLOW + BlockShuffle.game.getRound() + ChatColor.GRAY + "/" + BlockShuffle.game.getMaxNumberRounds());
+                        sb.setLine(11, "" + ChatColor.BLACK);
+                        sb.setLine(10, "" + ChatColor.BLUE);
+                        sb.setLine(9, "" + ChatColor.GRAY + "BLOCK TO FIND: ");
+                        sb.setLine(8, getCurrentBlock(entry.getKey()));
+                        sb.setLine(7, "   ");
+                        sb.setLine(6, "    ");
+                        sb.setLine(5, ChatColor.GRAY + "Score: " + ChatColor.LIGHT_PURPLE + BlockShuffle.scores.get(entry.getKey()));
+                        sb.setLine(4, ChatColor.GRAY + "Found players: " + ChatColor.GREEN + getFoundPlayers());
+                        sb.setLine(3, getPlayersRemaining());
+                        sb.setLine(2, "     ");
+                        sb.setLine(1, getTimeRemaining());
+                    } else {
+                        sb.setLine(11, " ");
+                        sb.setLine(10, "  ");
+                        sb.setLine(9, "   ");
+                        sb.setLine(8, "    ");
+                        sb.setLine(7, "     ");
+                        sb.setLine(6, "      ");
+                        sb.setLine(5, "       ");
+                        sb.setLine(4, "        ");
+                        sb.setLine(3, "         ");
+                        sb.setLine(2, "          ");
+                        sb.setLine(1, ChatColor.GRAY + "Players: " + ChatColor.YELLOW + BlockShuffle.players.size());
+                    }
+                }
+            }
+        }, 0L, 5L);
     }
 
-    public void setFoundBoard(Player p) {
-        p.setScoreboard(foundBoard);
+    public String getTimeRemaining() {
+        int minute = (int) TimeUnit.SECONDS.toMinutes(BlockShuffle.game.getTimeRemaining());
+        int second = BlockShuffle.game.getTimeRemaining() - (minute * 60);
+        String timeString;
+        if (minute > 3) {
+            timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.GREEN + ChatColor.BOLD + "%02d:%02d", minute, second);
+        } else if (minute > 0 && minute < 3) {
+            timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.YELLOW + ChatColor.BOLD + "%02d:%02d", minute, second);
+        } else {
+            timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.RED + ChatColor.BOLD + "%02d:%02d", minute, second);
+        }
+        return timeString;
     }
 
+    public int getFoundPlayers() {
+        int number = 0;
+        for (boolean found : BlockShuffle.players.values()) {
+            if (found) {
+                number += 1;
+            }
+        }
+        return number;
+    }
+
+    public String getPlayersRemaining() {
+        if (BlockShuffle.game.getElimination()) {
+            return ChatColor.GRAY + "Players remaining: " + ChatColor.YELLOW + BlockShuffle.players.size();
+        }
+        return "";
+    }
+
+    public String getCurrentBlock(Player p) {
+        if (BlockShuffle.players.get(p)) {
+            return "" + ChatColor.YELLOW + ChatColor.BOLD + BlockShuffle.game.getCurrentBlock().name().replace("_", " ") + ChatColor.GRAY + " - " + ChatColor.GREEN + ChatColor.BOLD + "FOUND!";
+        } else {
+            return "" + ChatColor.YELLOW + ChatColor.BOLD + BlockShuffle.game.getCurrentBlock().name().replace("_", " ");
+        }
+    }
 
 }
