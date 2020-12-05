@@ -47,7 +47,15 @@ public class ConfigManager {
                 e.printStackTrace();
             }
         }
-        plugin.saveDefaultConfig();
+        file = new File(plugin.getDataFolder() + "/config.yml");
+        if (!file.exists()) {
+            InputStream config = plugin.getResource("config.yml");
+            try {
+                Files.copy(config, file.getAbsoluteFile().toPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         saveConfig();
         getGroups();
     }
@@ -87,7 +95,8 @@ public class ConfigManager {
             }
             BlockShuffleGame game = new BlockShuffleGame(blocks.getBlocks(), getTime(prefix), getWorldBorder(prefix),
                     getWorlds(prefix), getSpawnLocation(prefix), getSpawnRadius(prefix), getMaxNumberRounds(prefix),
-                        getElimination(preset));
+                        getElimination(prefix), getPvP(prefix), getDifficulty(prefix), getDaylightCycle(prefix),
+                            getTimeOfDay(prefix), getHunger(prefix));
             games.put(preset.toLowerCase(), game);
         }
         return games;
@@ -98,19 +107,19 @@ public class ConfigManager {
     }
 
     public int getTime(String preset) {
-        return config.getInt(preset + ".round_time") * 20;
+        return config.getInt(preset + ".round_settings.round_time", 180) * 20;
     }
 
     public boolean getRandomBlockOrder(String preset) {
-        return config.getBoolean(preset + ".random_order");
+        return config.getBoolean(preset + ".round_settings.random_order", true);
     }
 
     public int getMaxNumberRounds(String preset) {
-        return config.getInt(preset + ".max_number_of_rounds");
+        return config.getInt(preset + ".round_settings.max_number_of_rounds", 10);
     }
 
     public int getWorldBorder(String preset) {
-        return config.getInt(preset + ".worldborder_diameter");
+        return config.getInt(preset + ".worlds.worldborder_diameter", 1000);
     }
 
     public ArrayList<String> getBlocks(String preset) {
@@ -124,32 +133,78 @@ public class ConfigManager {
     }
 
     public boolean getRandomBlocks(String preset) {
-        return config.getBoolean(preset + ".random_blocks");
+        return config.getBoolean(preset + ".round_settings.random_blocks", false);
     }
 
     public ArrayList<World> getWorlds(String preset) {
         ArrayList<World> worlds = new ArrayList<>();
-        worlds.add(Bukkit.getWorld(config.getString(preset + ".world_name")));
-        worlds.add(Bukkit.getWorld(config.getString(preset + ".nether_world_name")));
-        worlds.add(Bukkit.getWorld(config.getString(preset + ".end_world_name")));
+        worlds.add(Bukkit.getWorld(config.getString(preset + ".worlds.world_name", "world")));
+        worlds.add(Bukkit.getWorld(config.getString(preset + ".worlds.nether_world_name", "world_nether")));
+        worlds.add(Bukkit.getWorld(config.getString(preset + ".worlds.end_world_name", "world_the_end")));
+        for (World w : worlds) {
+            if (w == null) {
+                Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid world in " + preset + ".");
+            }
+        }
         return worlds;
     }
 
     public Location getSpawnLocation(String preset) {
-        World world = Bukkit.getWorld(config.getString(preset + ".default_game_world_name"));
-        double x = config.getDouble(preset + ".spawn_location.x");
-        double y = config.getDouble(preset + ".spawn_location.y");
-        double z = config.getDouble(preset + ".spawn_location.z");
+        World world = Bukkit.getWorld(config.getString(preset + ".worlds.default_game_world_name", "world"));
+        double x = config.getDouble(preset + ".worlds.spawn_location.x", 0);
+        double y = config.getDouble(preset + ".worlds.spawn_location.y", 68);
+        double z = config.getDouble(preset + ".worlds.spawn_location.z", 0);
         return new Location(world, x, y, z);
     }
 
     public int getSpawnRadius(String preset) {
-        return config.getInt(preset + ".spawn_radius");
+        return config.getInt(preset + ".worlds.spawn_radius", 10);
     }
 
     public boolean getElimination(String preset) {
-        return config.getBoolean(preset + ".elimination");
+        return config.getBoolean(preset + ".round_settings.elimination", false);
     }
 
+    public boolean getPvP(String preset) {
+        if (!config.isBoolean(preset+".round_settings.disable_pvp")) {
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid option in disable_pvp in " + preset + ".");
+        }
+        return !config.getBoolean(preset + ".disable_pvp", true);
+    }
 
+    public String getDifficulty(String preset) {
+        String difficulty = config.getString(preset + ".round_settings.difficulty", "normal");
+        if (!difficulty.equalsIgnoreCase("peaceful") && !difficulty.equalsIgnoreCase("easy")
+                && !difficulty.equalsIgnoreCase("normal") && !difficulty.equalsIgnoreCase("hard")) {
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid option in difficulty in " + preset + ".");
+        }
+        return difficulty;
+
+    }
+
+    public boolean getDaylightCycle(String preset) {
+        if (!config.isBoolean(preset+".round_settings.daylight_cycle")) {
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid option in daylight_cycle in " + preset + ".");
+        }
+        return config.getBoolean(preset + ".daylight_cycle", true);
+    }
+
+    public String getTimeOfDay(String preset) {
+        String time = config.getString(preset + ".round_settings.time_of_day", "day");
+        if (time.equalsIgnoreCase("day") || time.equalsIgnoreCase("night")
+                || time.equalsIgnoreCase("midnight") || time.equalsIgnoreCase("noon")
+                    || time.equalsIgnoreCase("sunset")) {
+            return time;
+        } else {
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] " + time + " is not recognised as a valid time of day in " + preset + ".");
+            return "day";
+        }
+
+    }
+    public boolean getHunger(String preset) {
+        if (!config.isBoolean(preset+".round_settings.disable_hunger")) {
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid option in disable_hunger in " + preset + ".");
+        }
+        return !config.getBoolean(preset + ".disable_hunger", false);
+    }
 }

@@ -1,11 +1,14 @@
 package dev.mylesmor.blockshuffle.game;
 
+import com.comphenix.net.sf.cglib.core.CollectionUtils;
 import dev.mylesmor.blockshuffle.BlockShuffle;
 import dev.mylesmor.blockshuffle.data.Status;
 import dev.mylesmor.blockshuffle.util.*;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,7 +28,8 @@ public class BlockShuffleGame {
     private int timeEachRound;
     private int timeRemaining;
     private int timeRemainingTaskID;
-    private int endOfRoundTask;
+    private int allCompleteTask;
+    private int timerIncreasePitchTask;
 
     private int worldborder;
     private ArrayList<World> worlds;
@@ -34,15 +38,32 @@ public class BlockShuffleGame {
 
     private int maxNumberRounds = 10;
     private boolean elimination = false;
+    private boolean pvp;
+    private String difficulty;
+    private boolean daylightCycle;
+    private String timeOfDay;
+    private boolean hunger;
+
+    private int speedUpTime = 1;
+
+    private float pitch = 1;
 
     private ArrayList<Player> lastPlayers = new ArrayList<>();
 
     /**
      * Constructor for creating a new game of BlockShuffle.
+     *
      * @param time The time for each round.
      */
     public BlockShuffleGame(ArrayList<Material> blocks, int time, int worldborder, ArrayList<World> worlds,
-                            Location spawnLoc, int spawnRadius, int maxNumberRounds, boolean elimination) {
+                            Location spawnLoc, int spawnRadius, int maxNumberRounds, boolean elimination,
+                            boolean pvp, String difficulty, boolean daylightCycle, String timeOfDay,
+                            boolean hunger) {
+        this.pvp = pvp;
+        this.difficulty = difficulty;
+        this.daylightCycle = daylightCycle;
+        this.timeOfDay = timeOfDay;
+        this.hunger = hunger;
         this.elimination = elimination;
         this.maxNumberRounds = maxNumberRounds;
         this.worlds = worlds;
@@ -72,11 +93,29 @@ public class BlockShuffleGame {
         this.status = status;
     }
 
-    public boolean getElimination() { return elimination; }
+    public double getSpeedUpTime() {
+        return speedUpTime;
+    }
 
-    public int getRound() { return round; }
+    public boolean getElimination() {
+        return elimination;
+    }
 
-    public int getMaxNumberRounds() { return maxNumberRounds; }
+    public int getRound() {
+        return round;
+    }
+
+    public int getMaxNumberRounds() {
+        return maxNumberRounds;
+    }
+
+    public boolean getPvP() {
+        return pvp;
+    }
+
+    public boolean getHunger() {
+        return hunger;
+    }
 
     /**
      * Starts a game of BlockShuffle.
@@ -99,6 +138,10 @@ public class BlockShuffleGame {
         Random r = new Random();
         for (Player p : BlockShuffle.players.keySet()) {
             p.setGameMode(GameMode.SURVIVAL);
+            p.setHealth(20);
+            p.getInventory().clear();
+            p.setFoodLevel(20);
+            p.setSaturation(20);
             int x = r.nextInt(spawnRadius - (-spawnRadius)) + -spawnRadius + (int) spawnLoc.getX();
             int z = r.nextInt(spawnRadius - (-spawnRadius)) + -spawnRadius + (int) spawnLoc.getZ();
             p.teleport(spawnWorld.getHighestBlockAt(x, z).getLocation().add(0, 1, 0));
@@ -110,6 +153,31 @@ public class BlockShuffleGame {
      */
     public void setupWorldBorder() {
         for (World w : worlds) {
+            w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, daylightCycle);
+            switch (timeOfDay) {
+                case "day":
+                    w.setTime(1000L);
+                    break;
+                case "noon":
+                    w.setTime(6000L);
+                    break;
+                case "sunset":
+                    w.setTime(12000L);
+                    break;
+                case "night":
+                    w.setTime(13000L);
+                    break;
+                case "midnight":
+                    w.setTime(18000L);
+                    break;
+            }
+            if (difficulty.equalsIgnoreCase("peaceful")) {
+                w.setDifficulty(Difficulty.PEACEFUL);
+                w.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+                w.setDifficulty(Difficulty.EASY);
+            } else {
+                w.setDifficulty(Difficulty.valueOf(difficulty.toUpperCase()));
+            }
             WorldBorder wb = w.getWorldBorder();
             wb.setCenter(spawnLoc);
             wb.setSize(worldborder);
@@ -120,20 +188,21 @@ public class BlockShuffleGame {
      * Chooses the next block to find.
      */
     public void chooseNextBlock(boolean skipped) {
+        speedUpTime = 1;
         blockNumber++;
-        if (round > maxNumberRounds-1) {
+        if (round > maxNumberRounds - 1) {
             endGame();
             return;
         }
         if (!skipped) {
             round++;
         }
-        BlockShuffle.players.replaceAll((k, v)->v=false);
+        BlockShuffle.players.replaceAll((k, v) -> v = false);
         currentBlock = blocks.get(blockNumber);
         for (Player p : BlockShuffle.players.keySet()) {
             // Updates player scoreboard and sends the message/title
             p.sendTitle(ChatColor.GRAY + "Choosing next block...", ChatColor.YELLOW + currentBlock.toString().replace("_", " "), 10, 70, 20);
-            Util.blockShuffleMessage(p, ChatColor.GRAY, "Stand on " + ChatColor.YELLOW + ChatColor.BOLD + currentBlock.toString().replace("_", " ") + ChatColor.GRAY + " and type /check", null);
+            Util.blockShuffleMessage(p, ChatColor.GRAY, "Stand on " + ChatColor.YELLOW + ChatColor.BOLD + currentBlock.toString().replace("_", " ") + ChatColor.GRAY + " and type" + ChatColor.LIGHT_PURPLE + " /check", null);
         }
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!BlockShuffle.players.containsKey(p)) {
@@ -142,41 +211,85 @@ public class BlockShuffleGame {
             }
         }
         timeRemaining = timeEachRound / 20;
-        calculateTime();
-        scheduleElimination();
+        calculateTime(20);
+        checkForAllComplete();
     }
 
     /**
      * Updates the timer for each round every second.
      */
-    private void calculateTime() {
+    private void calculateTime(int time) {
         timeRemainingTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
             @Override
             public void run() {
+                int finalTimeRemaining = (timeRemaining/speedUpTime)-1;
+                if (speedUpTime == 4) {
+                    finalTimeRemaining = timeRemaining/speedUpTime;
+                }
                 if (timeRemaining == 0) {
+                    eliminate();
                     return;
-                } else if (timeRemaining == 61 || timeRemaining == 31) {
+                } else if (timeRemaining == (60*speedUpTime)+1 || timeRemaining == (30*speedUpTime)+1) {
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, 3);
-                        Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(timeRemaining-1) + ChatColor.GRAY + " seconds remaining!", null);
+                        Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " seconds remaining!", null);
                     }
-                } else if (timeRemaining <= 11) {
+                } else if ( timeRemaining <= (10*speedUpTime)+1 && timeRemaining % speedUpTime == 1) {
                     for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, 3);
-                        if (timeRemaining-1 != 1) {
-                            Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(timeRemaining-1) + ChatColor.GRAY + " seconds remaining!", null);
+                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, 3F);
+                        if (timeRemaining - 1 != speedUpTime+1) {
+                            //TODO:
+                            Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " seconds remaining!", null);
                         } else {
-                            Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(timeRemaining-1) + ChatColor.GRAY + " second remaining!", null);
+                            Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " second remaining!", null);
                         }
                     }
                 }
                 timeRemaining--;
             }
-        }, 0, 20);
+        }, 0, time);
+    }
+
+    public void checkForAllComplete() {
+        allCompleteTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
+            @Override
+            public void run() {
+                boolean allComplete = true;
+                for (boolean value : BlockShuffle.players.values()) {
+                    if (!value) {
+                        allComplete = false;
+                    }
+                }
+                if (allComplete) {
+                    speedUpTime = 4;
+                    Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
+                    //TODO: Put in another class
+                    timerIncreasePitchTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
+                            @Override
+                            public void run() {
+                                if (pitch > 2) {
+                                    Bukkit.getScheduler().cancelTask(timerIncreasePitchTask);
+                                    return;
+                                }
+                                for (Player p : Bukkit.getOnlinePlayers()) {
+                                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, pitch);
+                                pitch += 0.1;
+                            }
+                        }
+                    }, 0, 2);
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        Util.blockShuffleMessage(p, ChatColor.GRAY, "All players have found the block. Timer speed increased" + ChatColor.DARK_RED + ChatColor.BOLD + " x4.", null);
+                    }
+                    calculateTime(5);
+                    Bukkit.getScheduler().cancelTask(allCompleteTask);
+                }
+            }
+        }, 0, 2);
     }
 
     /**
      * Checks the block the player is standing on.
+     *
      * @param p The player running the command.
      */
     public void verifyBlock(Player p) {
@@ -186,10 +299,11 @@ public class BlockShuffleGame {
         if (m.toString().equals(matToFind.toString()) || halfBlock.toString().equals(matToFind.toString())) {
             p.sendTitle(ChatColor.GREEN + "You've found the block!", "", 10, 70, 20);
             p.playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1f, 1f);
-            Util.blockShuffleMessage(p, ChatColor.GREEN, "Well done! Now continue mining and gathering materials until your next block!", null);
+            //Util.blockShuffleMessage(p, ChatColor.GREEN, "Well done! Now continue gathering materials until the next block!", null);
             BlockShuffle.players.replace(p, true);
             int score = BlockShuffle.scores.get(p);
-            BlockShuffle.scores.replace(p, 1000 + timeRemaining + score);
+            Util.blockShuffleMessage(p, ChatColor.GRAY, "Score " + ChatColor.LIGHT_PURPLE + "+" + timeRemaining, null);
+            BlockShuffle.scores.replace(p, timeRemaining + score);
         } else {
             p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_BREAK, 10, 3);
             Util.blockShuffleMessage(p, ChatColor.RED, "That is not the correct block! " + ChatColor.GRAY
@@ -200,37 +314,32 @@ public class BlockShuffleGame {
     }
 
     /**
-     * Schedules the end of each round, determining eliminations and whether the game is over.
+     * Called at the end of the round, determining eliminations (if enabled) and whether the game is over.
      */
-    public void scheduleElimination() {
-        endOfRoundTask = Bukkit.getScheduler().scheduleSyncDelayedTask(BlockShuffle.plugin, new Runnable() {
-            @Override
-            public void run() {
-                Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
-                // Determines whether all the remaining players have failed at this block
-                if (elimination) {
-                    if (!checkIfAllOut()) {
-                        lastPlayers.clear();
-                        // Eliminates players who have failed
-                        checkElimination();
-                        // Determine if one player remaining
-                        if (BlockShuffle.players.size() == 1) {
-                            for (Map.Entry<Player, Boolean> entry : BlockShuffle.players.entrySet()) {
-                                lastPlayers.add(entry.getKey());
-                            }
-                            endGame();
-                        } else {
-                            // Continue the game
-                            chooseNextBlock(false);
-                        }
-                    } else {
-                        endGame();
+    public void eliminate() {
+        Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
+        // Determines whether all the remaining players have failed at this block
+        if (elimination) {
+            if (!checkIfAllOut()) {
+                lastPlayers.clear();
+                // Eliminates players who have failed
+                checkElimination();
+                // Determine if one player remaining
+                if (BlockShuffle.players.size() == 1) {
+                    for (Map.Entry<Player, Boolean> entry : BlockShuffle.players.entrySet()) {
+                        lastPlayers.add(entry.getKey());
                     }
+                    endGame();
                 } else {
+                    // Continue the game
                     chooseNextBlock(false);
                 }
+            } else {
+                endGame();
             }
-        }, this.timeEachRound);
+        } else {
+            chooseNextBlock(false);
+        }
     }
 
     /**
@@ -265,6 +374,7 @@ public class BlockShuffleGame {
         }
         Player winner = maxEntry.getKey();
         winner.sendTitle(ChatColor.GREEN + "Winner!", "", 10, 70, 20);
+        Bukkit.getScheduler().cancelTask(allCompleteTask);
         winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.5f, 2f);
         winner.setGameMode(GameMode.SPECTATOR);
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -310,8 +420,8 @@ public class BlockShuffleGame {
     }
 
     public void skip() {
-        Bukkit.getScheduler().cancelTask(endOfRoundTask);
         Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
+        Bukkit.getScheduler().cancelTask(allCompleteTask);
         chooseNextBlock(true);
     }
 

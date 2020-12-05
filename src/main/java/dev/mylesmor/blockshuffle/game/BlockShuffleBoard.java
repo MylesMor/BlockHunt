@@ -1,6 +1,7 @@
 package dev.mylesmor.blockshuffle.game;
 
 import dev.mylesmor.blockshuffle.BlockShuffle;
+import dev.mylesmor.blockshuffle.data.Status;
 import dev.mylesmor.blockshuffle.util.ScoreboardSign;
 import dev.mylesmor.blockshuffle.util.Util;
 import org.bukkit.Bukkit;
@@ -42,18 +43,20 @@ public class BlockShuffleBoard {
                     ScoreboardSign sb = entry.getValue();
                     //TODO Add spectator scoreboard
                     if (BlockShuffle.game != null) {
-                        sb.setLine(12, ChatColor.GRAY + "Round: " + ChatColor.YELLOW + BlockShuffle.game.getRound() + ChatColor.GRAY + "/" + BlockShuffle.game.getMaxNumberRounds());
-                        sb.setLine(11, "" + ChatColor.BLACK);
-                        sb.setLine(10, "" + ChatColor.BLUE);
-                        sb.setLine(9, "" + ChatColor.GRAY + "BLOCK TO FIND: ");
-                        sb.setLine(8, getCurrentBlock(entry.getKey()));
-                        sb.setLine(7, "   ");
-                        sb.setLine(6, "    ");
-                        sb.setLine(5, ChatColor.GRAY + "Score: " + ChatColor.LIGHT_PURPLE + BlockShuffle.scores.get(entry.getKey()));
-                        sb.setLine(4, ChatColor.GRAY + "Found players: " + ChatColor.GREEN + getFoundPlayers());
-                        sb.setLine(3, getPlayersRemaining());
-                        sb.setLine(2, "     ");
-                        sb.setLine(1, getTimeRemaining());
+                        if (BlockShuffle.game.getStatus() == Status.INGAME) {
+                            sb.setLine(12, ChatColor.GRAY + "Round: " + ChatColor.YELLOW + BlockShuffle.game.getRound() + ChatColor.GRAY + "/" + BlockShuffle.game.getMaxNumberRounds());
+                            sb.setLine(11, "" + ChatColor.BLACK);
+                            sb.setLine(10, "" + ChatColor.BLUE);
+                            sb.setLine(9, "" + ChatColor.GRAY + "BLOCK TO FIND: ");
+                            sb.setLine(8, getCurrentBlock(entry.getKey()));
+                            sb.setLine(7, getFound(entry.getKey()));
+                            sb.setLine(6, "    ");
+                            sb.setLine(5, ChatColor.GRAY + "Score: " + ChatColor.LIGHT_PURPLE + BlockShuffle.scores.get(entry.getKey()));
+                            sb.setLine(4, ChatColor.GRAY + "Blocks found: " + ChatColor.GREEN + getFoundPlayers());
+                            sb.setLine(3, getPlayersRemaining());
+                            sb.setLine(2, "     ");
+                            sb.setLine(1, getTimeRemaining());
+                        }
                     } else {
                         sb.setLine(11, " ");
                         sb.setLine(10, "  ");
@@ -83,6 +86,9 @@ public class BlockShuffleBoard {
         } else {
             timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.RED + ChatColor.BOLD + "%02d:%02d", minute, second);
         }
+        if (BlockShuffle.game.getSpeedUpTime() != 1) {
+            timeString += "" + ChatColor.DARK_RED + ChatColor.BOLD + " x4";
+        }
         return timeString;
     }
 
@@ -104,10 +110,14 @@ public class BlockShuffleBoard {
     }
 
     public String getCurrentBlock(Player p) {
+        return "" + ChatColor.YELLOW + ChatColor.BOLD + BlockShuffle.game.getCurrentBlock().name().replace("_", " ");
+    }
+
+    public String getFound(Player p) {
         if (BlockShuffle.players.get(p)) {
-            return "" + ChatColor.YELLOW + ChatColor.BOLD + BlockShuffle.game.getCurrentBlock().name().replace("_", " ") + ChatColor.GRAY + " - " + ChatColor.GREEN + ChatColor.BOLD + "FOUND!";
+            return "" + ChatColor.GREEN + ChatColor.BOLD + "FOUND!";
         } else {
-            return "" + ChatColor.YELLOW + ChatColor.BOLD + BlockShuffle.game.getCurrentBlock().name().replace("_", " ");
+            return "";
         }
     }
 

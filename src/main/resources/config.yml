@@ -1,41 +1,55 @@
-# disabled_blocks and number_of_blocks only apply if random_blocks is set to true.
+# disabled_blocks only apply if random_blocks is set to true.
 presets:
-  ordered:
-    world_name: world
-    nether_world_name: world_nether
-    end_world_name: world_the_end
-    worldborder_diameter: 500
-    default_game_world_name: world
-    spawn_location:
-      x: 0
-      y: 64
-      z: 0
-    spawn_radius: 10
-    round_time: 30
-    elimination: true
-    random_blocks: false
-    max_number_of_rounds: 10
-    random_order: true
-    blocks:
-      - GRASS_BLOCK
+  example:         # The name of your preset (e.g., in-game type /bs start example to start this one).
+    worlds:
+      world_name: world                 # Name of your main world
+      nether_world_name: world_nether   # Name of Nether world
+      end_world_name: world_the_end     # Name of end world
+      worldborder_diameter: 500         # diameter of worldborder for each of the above worlds
+      default_game_world_name: world    # world to spawn in (should be one of the above worlds)
+      spawn_location:                   # Location of where the players should spawn when the game starts
+        x: 0
+        y: 64
+        z: 0
+      spawn_radius: 10                  # The radius in which the players will spawn randomly around the spawn_location
+    round_settings:
+      disable_pvp: true                 # True for PvP disabled, otherwise False
+      difficulty: peaceful              # The difficulty (peaceful/easy/normal/hard) !WARNING peaceful only stops mobs spawning, does not include fast health regen.
+      daylight_cycle: true              # True for daylight cycle enabled, otherwise False
+      time_of_day: day                  # The time of day which the game starts at (day/midnight/sunset/night/noon)
+      disable_hunger: false             # Whether players hunger should decrease or not
+      round_time: 30                    # How long in seconds for each round
+      elimination: true                 # Whether players are removed from the game if they miss a block
+      random_blocks: false              # Whether random blocks should be generated
+      max_number_of_rounds: 10          # How many rounds should be played (only applies if the allowed block list is bigger than this value
+      random_order: true                # Whether the allowed blocks are chosen in order of appearance in the list
+    blocks:                             # Which blocks you want to have in the game.
+      - groups.easy                     # Either choose from groups specified in the groups.yml by using groups.<group>
+      - GRASS_BLOCK                     # Or add your own blocks specified by their uppercase material name here.
       - STONE
       - COBBLESTONE
-  random:
-    world_name: world
-    nether_world_name: world_nether
-    end_world_name: world_the_end
-    worldborder_diameter: 500
-    default_game_world_name: world
-    spawn_location:
-      x: 0
-      y: 64
-      z: 0
-    spawn_radius: 10
-    round_time: 30
-    elimination: true
-    random_blocks: true
-    max_number_of_rounds: 10
-    disabled_blocks:
-      - END_CRYSTAL
-      - BARRIER
+  random:                             # Example 2
+    worlds:
+      world_name: world
+      nether_world_name: world_nether
+      end_world_name: world_the_end
+      worldborder_diameter: 500
+      default_game_world_name: world
+      spawn_location:
+        x: 0
+        y: 64
+        z: 0
+      spawn_radius: 10
+    round_settings:
+      disable_pvp: false
+      difficulty: false
+      daylight_cycle: true
+      time_of_day: day
+      disable_hunger: false
+      round_time: 30
+      elimination: true
+      random_blocks: true
+      max_number_of_rounds: 10
+    disabled_blocks:               # The blocks which should not be included if random_blocks is true.
+      - BARRIER                    # You can also use groups here as above (eg., groups.<group>)
       - COMMAND_BLOCK
