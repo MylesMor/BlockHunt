@@ -166,7 +166,7 @@ public class ConfigManager {
 
     public boolean getPvP(String preset) {
         if (!config.isBoolean(preset+".round_settings.disable_pvp")) {
-            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid option in disable_pvp in " + preset + ".");
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid value for key disable_pvp in " + preset + ".");
         }
         return !config.getBoolean(preset + ".disable_pvp", true);
     }
@@ -175,7 +175,7 @@ public class ConfigManager {
         String difficulty = config.getString(preset + ".round_settings.difficulty", "normal");
         if (!difficulty.equalsIgnoreCase("peaceful") && !difficulty.equalsIgnoreCase("easy")
                 && !difficulty.equalsIgnoreCase("normal") && !difficulty.equalsIgnoreCase("hard")) {
-            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid option in difficulty in " + preset + ".");
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid value for key difficulty in " + preset + ".");
         }
         return difficulty;
 
@@ -183,7 +183,7 @@ public class ConfigManager {
 
     public boolean getDaylightCycle(String preset) {
         if (!config.isBoolean(preset+".round_settings.daylight_cycle")) {
-            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid option in daylight_cycle in " + preset + ".");
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid value for key daylight_cycle in " + preset + ".");
         }
         return config.getBoolean(preset + ".daylight_cycle", true);
     }
@@ -195,14 +195,14 @@ public class ConfigManager {
                     || time.equalsIgnoreCase("sunset")) {
             return time;
         } else {
-            Bukkit.getLogger().warning("[BLOCKSHUFFLE] " + time + " is not recognised as a valid time of day in " + preset + ".");
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid value for key time_of_day in " + preset + ".");
             return "day";
         }
 
     }
     public boolean getHunger(String preset) {
         if (!config.isBoolean(preset+".round_settings.disable_hunger")) {
-            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid option in disable_hunger in " + preset + ".");
+            Bukkit.getLogger().warning("[BLOCKSHUFFLE] Invalid value for key disable_hunger in " + preset + ".");
         }
         return !config.getBoolean(preset + ".disable_hunger", false);
     }

@@ -110,7 +110,7 @@ public class BlockShuffleGame {
         for (Player p : BlockShuffle.players.keySet()) {
             BlockShuffle.scores.put(p, 0);
         }
-        setupWorldBorder();
+        setupWorlds();
         teleportPlayers();
         BlockShuffle.game.setStatus(Status.INGAME);
         chooseNextBlock(false);
@@ -137,7 +137,7 @@ public class BlockShuffleGame {
     /**
      * Sets up WorldBorder for game.
      */
-    public void setupWorldBorder() {
+    public void setupWorlds() {
         for (World w : worlds) {
             w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, daylightCycle);
             switch (timeOfDay) {
@@ -215,7 +215,6 @@ public class BlockShuffleGame {
                 if (allComplete) {
                     blockShuffleTimer.setSpeedUpTime(4);
                     blockShuffleTimer.cancelTimer();
-                    //TODO: Put in another class
                     blockShuffleSound.startSound(Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 0.1F, 2F, 1F, 2);
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         Util.blockShuffleMessage(p, ChatColor.GRAY, "All players have found the block. Timer speed increased" + ChatColor.DARK_RED + ChatColor.BOLD + " x4.", null);
