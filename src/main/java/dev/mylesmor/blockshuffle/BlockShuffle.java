@@ -5,6 +5,8 @@ import dev.mylesmor.blockshuffle.commands.Check;
 import dev.mylesmor.blockshuffle.config.ConfigManager;
 import dev.mylesmor.blockshuffle.game.*;
 import dev.mylesmor.blockshuffle.commands.Commands;
+import dev.mylesmor.blockshuffle.listeners.GameListener;
+import dev.mylesmor.blockshuffle.listeners.JoinLeaveListener;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -34,6 +36,8 @@ public class BlockShuffle extends JavaPlugin implements Listener {
         this.getCommand("blockshuffle").setTabCompleter(new BlockShuffleTabCompleter());
         this.getCommand("check").setExecutor(new Check());
         getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(new GameListener(), this);
+        getServer().getPluginManager().registerEvents(new JoinLeaveListener(), this);
         board = new BlockShuffleBoard();
     }
 

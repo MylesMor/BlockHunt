@@ -44,7 +44,7 @@ public class BlockShuffleBoard {
                     //TODO Add spectator scoreboard
                     if (BlockShuffle.game != null) {
                         if (BlockShuffle.game.getStatus() == Status.INGAME) {
-                            sb.setLine(12, ChatColor.GRAY + "Round: " + ChatColor.YELLOW + BlockShuffle.game.getRound() + ChatColor.GRAY + "/" + BlockShuffle.game.getMaxNumberRounds());
+                            sb.setLine(12, ChatColor.GRAY + "Round: " + ChatColor.YELLOW + ChatColor.BOLD + BlockShuffle.game.getRound() + ChatColor.GRAY + "/" + BlockShuffle.game.getMaxNumberRounds());
                             sb.setLine(11, "" + ChatColor.BLACK);
                             sb.setLine(10, "" + ChatColor.BLUE);
                             sb.setLine(9, "" + ChatColor.GRAY + "BLOCK TO FIND: ");
@@ -76,8 +76,8 @@ public class BlockShuffleBoard {
     }
 
     public String getTimeRemaining() {
-        int minute = (int) TimeUnit.SECONDS.toMinutes(BlockShuffle.game.getTimeRemaining());
-        int second = BlockShuffle.game.getTimeRemaining() - (minute * 60);
+        int minute = (int) TimeUnit.SECONDS.toMinutes(BlockShuffle.game.getBlockShuffleTimer().getTimeRemaining());
+        int second = BlockShuffle.game.getBlockShuffleTimer().getTimeRemaining() - (minute * 60);
         String timeString;
         if (minute > 3) {
             timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.GREEN + ChatColor.BOLD + "%02d:%02d", minute, second);
@@ -86,7 +86,7 @@ public class BlockShuffleBoard {
         } else {
             timeString = String.format(ChatColor.GRAY + "Time remaining: " + ChatColor.RED + ChatColor.BOLD + "%02d:%02d", minute, second);
         }
-        if (BlockShuffle.game.getSpeedUpTime() != 1) {
+        if (BlockShuffle.game.getBlockShuffleTimer().getSpeedUpTime() != 1) {
             timeString += "" + ChatColor.DARK_RED + ChatColor.BOLD + " x4";
         }
         return timeString;

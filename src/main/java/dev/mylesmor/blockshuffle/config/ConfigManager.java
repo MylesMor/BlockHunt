@@ -56,7 +56,6 @@ public class ConfigManager {
                 e.printStackTrace();
             }
         }
-        saveConfig();
         getGroups();
     }
 

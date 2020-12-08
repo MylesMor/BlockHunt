@@ -1,54 +1,43 @@
 package dev.mylesmor.blockshuffle.game;
 
-import com.comphenix.net.sf.cglib.core.CollectionUtils;
 import dev.mylesmor.blockshuffle.BlockShuffle;
 import dev.mylesmor.blockshuffle.data.Status;
 import dev.mylesmor.blockshuffle.util.*;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.time.Instant;
 import java.util.*;
 
 public class BlockShuffleGame {
 
     private Status status;
     private ArrayList<Material> blocks;
-    private int round = 0;
+    private int round;
     private int blockNumber = 0;
     private Material currentBlock = null;
 
     private int timeEachRound;
-    private int timeRemaining;
-    private int timeRemainingTaskID;
     private int allCompleteTask;
-    private int timerIncreasePitchTask;
 
     private int worldborder;
     private ArrayList<World> worlds;
     private Location spawnLoc;
     private int spawnRadius;
 
-    private int maxNumberRounds = 10;
-    private boolean elimination = false;
+    private int maxNumberRounds;
+    private boolean elimination;
     private boolean pvp;
     private String difficulty;
     private boolean daylightCycle;
     private String timeOfDay;
     private boolean hunger;
 
-    private int speedUpTime = 1;
-
-    private float pitch = 1;
-
     private ArrayList<Player> lastPlayers = new ArrayList<>();
+    private final ScoreWriter scoreWriter = new ScoreWriter(this);
+
+    private BlockShuffleTimer blockShuffleTimer;
+    private BlockShuffleSoundGenerator blockShuffleSound = new BlockShuffleSoundGenerator();
 
     /**
      * Constructor for creating a new game of BlockShuffle.
@@ -72,17 +61,14 @@ public class BlockShuffleGame {
         status = Status.LOBBY;
         this.worldborder = worldborder;
         this.timeEachRound = time;
-        this.timeRemaining = time / 20;
         this.blocks = blocks;
         this.round = this.blockNumber;
+        this.blockShuffleTimer = new BlockShuffleTimer(this, time / 20, 1);
+
     }
 
     public Material getCurrentBlock() {
         return currentBlock;
-    }
-
-    public int getTimeRemaining() {
-        return timeRemaining;
     }
 
     public Status getStatus() {
@@ -91,10 +77,6 @@ public class BlockShuffleGame {
 
     public void setStatus(Status status) {
         this.status = status;
-    }
-
-    public double getSpeedUpTime() {
-        return speedUpTime;
     }
 
     public boolean getElimination() {
@@ -115,6 +97,10 @@ public class BlockShuffleGame {
 
     public boolean getHunger() {
         return hunger;
+    }
+
+    public BlockShuffleTimer getBlockShuffleTimer() {
+        return blockShuffleTimer;
     }
 
     /**
@@ -188,7 +174,7 @@ public class BlockShuffleGame {
      * Chooses the next block to find.
      */
     public void chooseNextBlock(boolean skipped) {
-        speedUpTime = 1;
+        blockShuffleTimer.setSpeedUpTime(1);
         blockNumber++;
         if (round > maxNumberRounds - 1) {
             endGame();
@@ -210,45 +196,11 @@ public class BlockShuffleGame {
                 Util.blockShuffleMessage(p, ChatColor.GRAY, "The players now need to find: " + ChatColor.YELLOW + ChatColor.BOLD + currentBlock.toString().replace("_", " "), null);
             }
         }
-        timeRemaining = timeEachRound / 20;
-        calculateTime(20);
+        blockShuffleTimer.setTimeRemaining(timeEachRound / 20);
+        blockShuffleTimer.startTimer(20);
         checkForAllComplete();
     }
 
-    /**
-     * Updates the timer for each round every second.
-     */
-    private void calculateTime(int time) {
-        timeRemainingTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
-            @Override
-            public void run() {
-                int finalTimeRemaining = (timeRemaining/speedUpTime)-1;
-                if (speedUpTime == 4) {
-                    finalTimeRemaining = timeRemaining/speedUpTime;
-                }
-                if (timeRemaining == 0) {
-                    eliminate();
-                    return;
-                } else if (timeRemaining == (60*speedUpTime)+1 || timeRemaining == (30*speedUpTime)+1) {
-                    for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, 3);
-                        Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " seconds remaining!", null);
-                    }
-                } else if ( timeRemaining <= (10*speedUpTime)+1 && timeRemaining % speedUpTime == 1) {
-                    for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, 3F);
-                        if (timeRemaining - 1 != speedUpTime+1) {
-                            //TODO:
-                            Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " seconds remaining!", null);
-                        } else {
-                            Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " second remaining!", null);
-                        }
-                    }
-                }
-                timeRemaining--;
-            }
-        }, 0, time);
-    }
 
     public void checkForAllComplete() {
         allCompleteTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
@@ -261,26 +213,14 @@ public class BlockShuffleGame {
                     }
                 }
                 if (allComplete) {
-                    speedUpTime = 4;
-                    Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
+                    blockShuffleTimer.setSpeedUpTime(4);
+                    blockShuffleTimer.cancelTimer();
                     //TODO: Put in another class
-                    timerIncreasePitchTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (pitch > 2) {
-                                    Bukkit.getScheduler().cancelTask(timerIncreasePitchTask);
-                                    return;
-                                }
-                                for (Player p : Bukkit.getOnlinePlayers()) {
-                                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, pitch);
-                                pitch += 0.1;
-                            }
-                        }
-                    }, 0, 2);
+                    blockShuffleSound.startSound(Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 0.1F, 2F, 1F, 2);
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         Util.blockShuffleMessage(p, ChatColor.GRAY, "All players have found the block. Timer speed increased" + ChatColor.DARK_RED + ChatColor.BOLD + " x4.", null);
                     }
-                    calculateTime(5);
+                    blockShuffleTimer.startTimer(5);
                     Bukkit.getScheduler().cancelTask(allCompleteTask);
                 }
             }
@@ -299,11 +239,10 @@ public class BlockShuffleGame {
         if (m.toString().equals(matToFind.toString()) || halfBlock.toString().equals(matToFind.toString())) {
             p.sendTitle(ChatColor.GREEN + "You've found the block!", "", 10, 70, 20);
             p.playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1f, 1f);
-            //Util.blockShuffleMessage(p, ChatColor.GREEN, "Well done! Now continue gathering materials until the next block!", null);
             BlockShuffle.players.replace(p, true);
             int score = BlockShuffle.scores.get(p);
-            Util.blockShuffleMessage(p, ChatColor.GRAY, "Score " + ChatColor.LIGHT_PURPLE + "+" + timeRemaining, null);
-            BlockShuffle.scores.replace(p, timeRemaining + score);
+            Util.blockShuffleMessage(p, ChatColor.GRAY, "Score " + ChatColor.LIGHT_PURPLE + "+" + blockShuffleTimer.getTimeRemaining(), null);
+            BlockShuffle.scores.replace(p, blockShuffleTimer.getTimeRemaining() + score);
         } else {
             p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_BREAK, 10, 3);
             Util.blockShuffleMessage(p, ChatColor.RED, "That is not the correct block! " + ChatColor.GRAY
@@ -317,7 +256,7 @@ public class BlockShuffleGame {
      * Called at the end of the round, determining eliminations (if enabled) and whether the game is over.
      */
     public void eliminate() {
-        Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
+        blockShuffleTimer.cancelTimer();
         // Determines whether all the remaining players have failed at this block
         if (elimination) {
             if (!checkIfAllOut()) {
@@ -380,63 +319,17 @@ public class BlockShuffleGame {
         for (Player p : Bukkit.getOnlinePlayers()) {
             Util.blockShuffleMessage(p, ChatColor.GRAY, "The game is now over! " + ChatColor.GREEN + "Winner: %NAME%", winner.getName());
         }
-        saveScores();
+        scoreWriter.saveScores();
         resetGame();
     }
 
-    /**
-     * Writes the scores at the end of a game to scores.csv in the BlockShuffle plugin folder.
-     */
-    public void saveScores() {
-        try {
-            File file = new File(BlockShuffle.plugin.getDataFolder() + "/scores" + Instant.now().getEpochSecond() + ".csv");
-            if (file.createNewFile()) {
-                Bukkit.getLogger().info("[BLOCKSHUFFLE] File created: " + file.getName());
-            }
-        } catch (IOException e) {
-            Bukkit.getLogger().warning("[BLOCKSHUFFLE] An error occurred whilst creating scores.csv!");
-            e.printStackTrace();
-        }
-        File file = new File(BlockShuffle.plugin.getDataFolder() + "/scores.csv");
-        if (file.exists()) {
-            ArrayList<String> lines = convertScores();
-            try {
-                new PrintWriter(BlockShuffle.plugin.getDataFolder() + "/scores.csv").close();
-                FileWriter fw = new FileWriter(file);
-                fw.append("Name");
-                fw.append(",");
-                fw.append("Score");
-                fw.append("\n");
-                for (String line : lines) {
-                    fw.append(line);
-                }
-                fw.flush();
-                Bukkit.getLogger().info("[BLOCKSHUFFLE] Successfully written scores to scores.csv!");
-                fw.close();
-            } catch (IOException e) {
-                Bukkit.getLogger().warning("[BLOCKSHUFFLE] Failed to write scores to scores.csv!");
-            }
-        }
-    }
 
     public void skip() {
-        Bukkit.getScheduler().cancelTask(timeRemainingTaskID);
+        blockShuffleTimer.cancelTimer();
         Bukkit.getScheduler().cancelTask(allCompleteTask);
         chooseNextBlock(true);
     }
 
-    /**
-     * Converts the scores hashmap into a format for saving to a file.
-     * @return An ArrayList of ArrayList<String>, which each entry containing a line to write to the file.
-     */
-    public ArrayList<String> convertScores() {
-        ArrayList<String> lines = new ArrayList<>();
-        for (Map.Entry<Player, Integer> entry : BlockShuffle.scores.entrySet()) {
-            String line = entry.getKey().getName() + "," + entry.getValue() + "\n";
-            lines.add(line);
-        }
-        return lines;
-    }
 
     /**
      * Resets the game, ready for another round.
