@@ -107,6 +107,7 @@ public class BlockShuffleGame {
      * Starts a game of BlockShuffle.
      */
     public void start() {
+        BlockShuffle.scores.clear();
         for (Player p : BlockShuffle.players.keySet()) {
             BlockShuffle.scores.put(p, 0);
         }
@@ -213,6 +214,12 @@ public class BlockShuffleGame {
                     }
                 }
                 if (allComplete) {
+                    if (round > maxNumberRounds - 1) {
+                        endGame();
+                        Bukkit.getScheduler().cancelTask(allCompleteTask);
+                        blockShuffleTimer.cancelTimer();
+                        return;
+                    }
                     blockShuffleTimer.setSpeedUpTime(4);
                     blockShuffleTimer.cancelTimer();
                     blockShuffleSound.startSound(Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 0.1F, 2F, 1F, 2);
@@ -220,7 +227,6 @@ public class BlockShuffleGame {
                         Util.blockShuffleMessage(p, ChatColor.GRAY, "All players have found the block. Timer speed increased" + ChatColor.DARK_RED + ChatColor.BOLD + " x4.", null);
                     }
                     blockShuffleTimer.startTimer(5);
-                    Bukkit.getScheduler().cancelTask(allCompleteTask);
                 }
             }
         }, 0, 2);
@@ -336,6 +342,7 @@ public class BlockShuffleGame {
     public void resetGame() {
         BlockShuffle.game.setStatus(Status.LOBBY);
         BlockShuffle.players.clear();
+        BlockShuffle.games = BlockShuffle.config.getGames();
         //TODO
     }
 

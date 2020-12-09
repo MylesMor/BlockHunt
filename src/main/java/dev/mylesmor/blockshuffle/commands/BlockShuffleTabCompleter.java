@@ -2,6 +2,7 @@ package dev.mylesmor.blockshuffle.commands;
 
 import dev.mylesmor.blockshuffle.BlockShuffle;
 import dev.mylesmor.blockshuffle.util.Permissions;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -24,15 +25,15 @@ public class BlockShuffleTabCompleter implements TabCompleter {
                 if (p.hasPermission(Permissions.START)) {
                     commands.add("start");
                 }
+                if (p.hasPermission(Permissions.SKIP)) {
+                    commands.add("join");
+                }
                 return commands;
             }
             if (args.length == 2) {
-                ArrayList<String> suggestions = new ArrayList<>();
-                if ("start".equalsIgnoreCase(args[1])) {
-                    suggestions.addAll(BlockShuffle.games.keySet());
-                    return suggestions;
+                if ("start".equalsIgnoreCase(args[0])) {
+                    return new ArrayList<>(BlockShuffle.games.keySet());
                 }
-
             }
         }
         return null;

@@ -35,6 +35,14 @@ public class BlockShuffleBoard {
         }
     }
 
+    public void destroySingular(Player p) {
+        for (Map.Entry<Player, ScoreboardSign> entry : boards.entrySet()) {
+            if (entry.getKey().equals(p)) {
+                entry.getValue().destroy();
+            }
+        }
+    }
+
     public void updateScoreboard() {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
             @Override

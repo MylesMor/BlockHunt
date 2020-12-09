@@ -17,6 +17,9 @@ public class JoinLeaveListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
+        if (BlockShuffle.players.containsKey(e.getPlayer())) {
+            BlockShuffle.board.setScoreboard(e.getPlayer());
+        }
         //TODO
     }
 

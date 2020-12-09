@@ -18,6 +18,7 @@ public class Join {
         if (p.hasPermission(Permissions.JOIN)) {
             if (!BlockShuffle.players.containsKey(p)) {
                 BlockShuffle.players.put(p, false);
+                BlockShuffle.board.destroySingular(p);
                 BlockShuffle.board.setScoreboard(p);
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                     Util.blockShuffleMessage(onlinePlayer, ChatColor.GRAY, ChatColor.GOLD + p.getName() + ChatColor.GRAY + " joined the game! There are now " + ChatColor.YELLOW + BlockShuffle.players.size() + ChatColor.GRAY + " player(s).", null);
