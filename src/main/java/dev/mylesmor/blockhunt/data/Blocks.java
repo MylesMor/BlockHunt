@@ -1,8 +1,7 @@
-package dev.mylesmor.blockshuffle.data;
+package dev.mylesmor.blockhunt.data;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +19,7 @@ public class Blocks {
                 Material m = Material.getMaterial(block.toUpperCase());
                 if (m != null && !this.blocks.contains(m) && m.isBlock()) {
                         this.blocks.add(m);
-                } else {
+                } else if (m == null) {
                     Bukkit.getLogger().warning("[BLOCKSHUFFLE] Material " + block + " is invalid! Skipping...");
                 }
             }

@@ -1,8 +1,7 @@
-package dev.mylesmor.blockshuffle.commands;
+package dev.mylesmor.blockhunt.commands;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
-import dev.mylesmor.blockshuffle.util.Permissions;
-import org.bukkit.Bukkit;
+import dev.mylesmor.blockhunt.BlockHunt;
+import dev.mylesmor.blockhunt.util.Permissions;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -11,7 +10,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockShuffleTabCompleter implements TabCompleter {
+public class BlockHuntTabCompleter implements TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String label, String[] args) {
@@ -32,7 +31,7 @@ public class BlockShuffleTabCompleter implements TabCompleter {
             }
             if (args.length == 2) {
                 if ("start".equalsIgnoreCase(args[0])) {
-                    return new ArrayList<>(BlockShuffle.games.keySet());
+                    return new ArrayList<>(BlockHunt.games.keySet());
                 }
             }
         }

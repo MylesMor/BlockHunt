@@ -1,4 +1,4 @@
-package dev.mylesmor.blockshuffle.data;
+package dev.mylesmor.blockhunt.data;
 
 public enum Status {
     LOBBY,

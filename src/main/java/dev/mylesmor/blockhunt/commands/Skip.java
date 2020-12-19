@@ -1,12 +1,9 @@
-package dev.mylesmor.blockshuffle.commands;
+package dev.mylesmor.blockhunt.commands;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
-import dev.mylesmor.blockshuffle.data.Status;
-import dev.mylesmor.blockshuffle.util.Permissions;
-import dev.mylesmor.blockshuffle.util.Util;
-import org.bukkit.Bukkit;
+import dev.mylesmor.blockhunt.BlockHunt;
+import dev.mylesmor.blockhunt.util.Permissions;
+import dev.mylesmor.blockhunt.util.Util;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 public class Skip {
@@ -18,7 +15,7 @@ public class Skip {
      */
     public static void skip(Player p, String[] args) {
         if (p.hasPermission(Permissions.SKIP)) {
-            BlockShuffle.game.skip();
+            BlockHunt.game.skip();
         } else {
             Util.blockShuffleMessage(p, ChatColor.RED, "You don't have permission to use this command!", null);
         }

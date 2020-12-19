@@ -1,7 +1,7 @@
-package dev.mylesmor.blockshuffle.listeners;
+package dev.mylesmor.blockhunt.listeners;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
-import dev.mylesmor.blockshuffle.data.Status;
+import dev.mylesmor.blockhunt.BlockHunt;
+import dev.mylesmor.blockhunt.data.Status;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,17 +12,17 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onPlayerPvP(EntityDamageByEntityEvent e) {
-        if (BlockShuffle.game != null) {
+        if (BlockHunt.game != null) {
             if (e.getDamager() instanceof Player && e.getEntity() instanceof Player) {
                 Player damager = (Player) e.getDamager();
                 Player reciever = (Player) e.getEntity();
-                if (BlockShuffle.game.getStatus() == Status.LOBBY) {
-                    if (BlockShuffle.players.containsKey(damager) && BlockShuffle.players.containsKey(reciever)) {
+                if (BlockHunt.game.getStatus() == Status.LOBBY) {
+                    if (BlockHunt.players.containsKey(damager) && BlockHunt.players.containsKey(reciever)) {
                         e.setCancelled(true);
                     }
                 } else {
-                    if (!BlockShuffle.game.getPvP()) {
-                        if (BlockShuffle.players.containsKey(damager) && BlockShuffle.players.containsKey(reciever)) {
+                    if (!BlockHunt.game.getPvP()) {
+                        if (BlockHunt.players.containsKey(damager) && BlockHunt.players.containsKey(reciever)) {
                             e.setCancelled(true);
                         }
                     }
@@ -33,15 +33,15 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onPlayerHunger(FoodLevelChangeEvent e) {
-        if (BlockShuffle.game != null) {
+        if (BlockHunt.game != null) {
             if (e.getEntity() instanceof Player) {
                 Player p = (Player) e.getEntity();
-                if (BlockShuffle.game.getStatus() == Status.LOBBY) {
-                    if (BlockShuffle.players.containsKey(p)) {
+                if (BlockHunt.game.getStatus() == Status.LOBBY) {
+                    if (BlockHunt.players.containsKey(p)) {
                         e.setCancelled(true);
                     }
                 } else {
-                    if (!BlockShuffle.game.getHunger()) {
+                    if (!BlockHunt.game.getHunger()) {
                         p.setFoodLevel(20);
                         e.setCancelled(true);
                     }

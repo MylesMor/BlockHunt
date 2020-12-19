@@ -1,4 +1,4 @@
-package dev.mylesmor.blockshuffle.util;
+package dev.mylesmor.blockhunt.util;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;

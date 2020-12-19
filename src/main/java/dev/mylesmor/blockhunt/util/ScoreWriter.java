@@ -1,7 +1,7 @@
-package dev.mylesmor.blockshuffle.util;
+package dev.mylesmor.blockhunt.util;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
-import dev.mylesmor.blockshuffle.game.BlockShuffleGame;
+import dev.mylesmor.blockhunt.BlockHunt;
+import dev.mylesmor.blockhunt.game.BlockHuntGame;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -15,9 +15,9 @@ import java.util.Map;
 
 public class ScoreWriter {
 
-    BlockShuffleGame game;
+    BlockHuntGame game;
 
-    public ScoreWriter(BlockShuffleGame game) {
+    public ScoreWriter(BlockHuntGame game) {
         this.game = game;
     }
 
@@ -27,7 +27,7 @@ public class ScoreWriter {
      */
     public void saveScores() {
         try {
-            File file = new File(BlockShuffle.plugin.getDataFolder() + "/scores" + Instant.now().getEpochSecond() + ".csv");
+            File file = new File(BlockHunt.plugin.getDataFolder() + "/scores" + Instant.now().getEpochSecond() + ".csv");
             if (file.createNewFile()) {
                 Bukkit.getLogger().info("[BLOCKSHUFFLE] File created: " + file.getName());
             }
@@ -35,11 +35,11 @@ public class ScoreWriter {
             Bukkit.getLogger().warning("[BLOCKSHUFFLE] An error occurred whilst creating scores.csv!");
             e.printStackTrace();
         }
-        File file = new File(BlockShuffle.plugin.getDataFolder() + "/scores.csv");
+        File file = new File(BlockHunt.plugin.getDataFolder() + "/scores.csv");
         if (file.exists()) {
             ArrayList<String> lines = convertScores();
             try {
-                new PrintWriter(BlockShuffle.plugin.getDataFolder() + "/scores.csv").close();
+                new PrintWriter(BlockHunt.plugin.getDataFolder() + "/scores.csv").close();
                 FileWriter fw = new FileWriter(file);
                 fw.append("Name");
                 fw.append(",");
@@ -63,7 +63,7 @@ public class ScoreWriter {
      */
     private ArrayList<String> convertScores() {
         ArrayList<String> lines = new ArrayList<>();
-        for (Map.Entry<Player, Integer> entry : BlockShuffle.scores.entrySet()) {
+        for (Map.Entry<Player, Integer> entry : BlockHunt.scores.entrySet()) {
             String line = entry.getKey().getName() + "," + entry.getValue() + "\n";
             lines.add(line);
         }

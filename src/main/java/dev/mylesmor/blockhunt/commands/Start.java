@@ -1,9 +1,8 @@
-package dev.mylesmor.blockshuffle.commands;
+package dev.mylesmor.blockhunt.commands;
 
-import dev.mylesmor.blockshuffle.data.Status;
-import dev.mylesmor.blockshuffle.game.BlockShuffleGame;
-import dev.mylesmor.blockshuffle.util.*;
-import dev.mylesmor.blockshuffle.BlockShuffle;
+import dev.mylesmor.blockhunt.data.Status;
+import dev.mylesmor.blockhunt.util.*;
+import dev.mylesmor.blockhunt.BlockHunt;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -20,16 +19,16 @@ public class Start {
         if (p.hasPermission(Permissions.START)) {
             if (args != null) {
                 if (args.length == 1) {
-                    BlockShuffle.game = BlockShuffle.games.get(args[0].toLowerCase());
-                    if (BlockShuffle.game != null) {
-                        if (BlockShuffle.game.getStatus() == Status.LOBBY) {
-                            if (BlockShuffle.players.size() >= 1) {
+                    BlockHunt.game = BlockHunt.games.get(args[0].toLowerCase());
+                    if (BlockHunt.game != null) {
+                        if (BlockHunt.game.getStatus() == Status.LOBBY) {
+                            if (BlockHunt.players.size() >= 1) {
                                 for (Player pl : Bukkit.getOnlinePlayers()) {
-                                    if (!BlockShuffle.players.containsKey(pl)) {
+                                    if (!BlockHunt.players.containsKey(pl)) {
                                         pl.setGameMode(GameMode.SPECTATOR);
                                     }
                                 }
-                                BlockShuffle.game.start();
+                                BlockHunt.game.start();
                             } else {
                                 Util.blockShuffleMessage(p, ChatColor.RED, "Not enough players to start the game!", null);
                             }

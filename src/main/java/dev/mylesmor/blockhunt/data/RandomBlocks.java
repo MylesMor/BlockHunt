@@ -1,6 +1,5 @@
-package dev.mylesmor.blockshuffle.data;
+package dev.mylesmor.blockhunt.data;
 
-import jdk.nashorn.internal.ir.Block;
 import org.bukkit.Material;
 
 import java.util.ArrayList;

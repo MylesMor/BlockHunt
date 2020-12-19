@@ -1,10 +1,8 @@
-package dev.mylesmor.blockshuffle.config;
+package dev.mylesmor.blockhunt.config;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
-import dev.mylesmor.blockshuffle.data.Blocks;
-import dev.mylesmor.blockshuffle.data.RandomBlocks;
-import dev.mylesmor.blockshuffle.data.Status;
-import dev.mylesmor.blockshuffle.game.BlockShuffleGame;
+import dev.mylesmor.blockhunt.data.Blocks;
+import dev.mylesmor.blockhunt.data.RandomBlocks;
+import dev.mylesmor.blockhunt.game.BlockHuntGame;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -38,6 +36,7 @@ public class ConfigManager {
     }
 
     private void setupConfig() {
+        plugin.saveDefaultConfig();
         File file = new File(plugin.getDataFolder() + "/groups.yml");
         if (!file.exists()) {
             InputStream groups = plugin.getResource("groups.yml");
@@ -82,8 +81,8 @@ public class ConfigManager {
         }
     }
 
-    public HashMap<String, BlockShuffleGame> getGames() {
-        HashMap<String, BlockShuffleGame> games = new HashMap<>();
+    public HashMap<String, BlockHuntGame> getGames() {
+        HashMap<String, BlockHuntGame> games = new HashMap<>();
         for (String preset : config.getConfigurationSection("presets").getKeys(false)) {
             String prefix = "presets." + preset;
             Blocks blocks;
@@ -92,7 +91,7 @@ public class ConfigManager {
             } else {
                 blocks = new Blocks(groups, getBlocks(prefix), getRandomBlockOrder(prefix));
             }
-            BlockShuffleGame game = new BlockShuffleGame(blocks.getBlocks(), getTime(prefix), getWorldBorder(prefix),
+            BlockHuntGame game = new BlockHuntGame(blocks.getBlocks(), getTime(prefix), getWorldBorder(prefix),
                     getWorlds(prefix), getSpawnLocation(prefix), getSpawnRadius(prefix), getMaxNumberRounds(prefix),
                         getElimination(prefix), getPvP(prefix), getDifficulty(prefix), getDaylightCycle(prefix),
                             getTimeOfDay(prefix), getHunger(prefix));

@@ -1,4 +1,4 @@
-package dev.mylesmor.blockshuffle.util;
+package dev.mylesmor.blockhunt.util;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;

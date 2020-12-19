@@ -1,12 +1,12 @@
-name: BlockShuffle
+name: BlockHunt
 version: 1.0.0
 author: MylesMor
-main: dev.mylesmor.blockshuffle.BlockShuffle
+main: dev.mylesmor.blockhunt.BlockHunt
 api-version: 1.16
 depend: [ProtocolLib]
 commands:
-  blockshuffle:
-    description: Opens the BlockShuffle help menu.
-    aliases: [bs]
+  blockhunt:
+    description: Opens the BlockHunt help menu.
+    aliases: [bh]
   check:
     description: Checks the block.

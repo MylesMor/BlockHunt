@@ -1,8 +1,8 @@
-package dev.mylesmor.blockshuffle.commands;
+package dev.mylesmor.blockhunt.commands;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
-import dev.mylesmor.blockshuffle.data.Status;
-import dev.mylesmor.blockshuffle.util.*;
+import dev.mylesmor.blockhunt.BlockHunt;
+import dev.mylesmor.blockhunt.data.Status;
+import dev.mylesmor.blockhunt.util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -16,18 +16,18 @@ public class Join {
      */
     public static void join(Player p, String[] args) {
         if (p.hasPermission(Permissions.JOIN)) {
-            if (!BlockShuffle.players.containsKey(p)) {
-                BlockShuffle.players.put(p, false);
-                BlockShuffle.board.destroySingular(p);
-                BlockShuffle.board.setScoreboard(p);
+            if (!BlockHunt.players.containsKey(p)) {
+                BlockHunt.players.put(p, false);
+                BlockHunt.board.destroySingular(p);
+                BlockHunt.board.setScoreboard(p);
                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                    Util.blockShuffleMessage(onlinePlayer, ChatColor.GRAY, ChatColor.GOLD + p.getName() + ChatColor.GRAY + " joined the game! There are now " + ChatColor.YELLOW + BlockShuffle.players.size() + ChatColor.GRAY + " player(s).", null);
+                    Util.blockShuffleMessage(onlinePlayer, ChatColor.GRAY, ChatColor.GOLD + p.getName() + ChatColor.GRAY + " joined the game! There are now " + ChatColor.YELLOW + BlockHunt.players.size() + ChatColor.GRAY + " player(s).", null);
                 }
             } else {
-                if (BlockShuffle.players.containsKey(p)) {
+                if (BlockHunt.players.containsKey(p)) {
                     Util.blockShuffleMessage(p, ChatColor.RED, "You are already in a game!", null);
                 } else {
-                    if (BlockShuffle.game.getStatus() == Status.INGAME) {
+                    if (BlockHunt.game.getStatus() == Status.INGAME) {
                         Util.blockShuffleMessage(p, ChatColor.RED, "Sorry, you're already out!", null);
                     }
                 }

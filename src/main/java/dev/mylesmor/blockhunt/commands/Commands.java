@@ -1,4 +1,4 @@
-package dev.mylesmor.blockshuffle.commands;
+package dev.mylesmor.blockhunt.commands;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -6,7 +6,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import dev.mylesmor.blockshuffle.util.*;
+import dev.mylesmor.blockhunt.util.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class Commands implements CommandExecutor {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                Util.blockShuffleMessage(p, ChatColor.RED, "Invalid command!" + ChatColor.GRAY + " Type " + ChatColor.LIGHT_PURPLE + "/bs help " + ChatColor.GRAY + "for a list of commands.", null);
+                Util.blockShuffleMessage(p, ChatColor.RED, "Invalid command!" + ChatColor.GRAY + " Type " + ChatColor.LIGHT_PURPLE + "/bh help " + ChatColor.GRAY + "for a list of commands.", null);
             }
         }
         return true;

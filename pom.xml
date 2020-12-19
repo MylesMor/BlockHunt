@@ -9,8 +9,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
-    <groupId>dev.mylesmor.blockshuffle</groupId>
-    <artifactId>BlockShuffle</artifactId>
+    <groupId>dev.mylesmor.blockhunt</groupId>
+    <artifactId>BlockHunt</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0</version>
 

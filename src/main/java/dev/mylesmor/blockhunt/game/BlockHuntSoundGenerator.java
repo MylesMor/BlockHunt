@@ -1,20 +1,20 @@
-package dev.mylesmor.blockshuffle.game;
+package dev.mylesmor.blockhunt.game;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
+import dev.mylesmor.blockhunt.BlockHunt;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-public class BlockShuffleSoundGenerator {
+public class BlockHuntSoundGenerator {
 
     int playSoundTask;
     float pitch;
 
-    public BlockShuffleSoundGenerator() { }
+    public BlockHuntSoundGenerator() { }
 
     public void startSound(Sound sound, float startPitch, float increment, float maxPitch, float volume, int speed) {
         pitch = startPitch;
-        playSoundTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, () -> {
+        playSoundTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockHunt.plugin, () -> {
             if (pitch > maxPitch) {
                 Bukkit.getScheduler().cancelTask(playSoundTask);
                 return;

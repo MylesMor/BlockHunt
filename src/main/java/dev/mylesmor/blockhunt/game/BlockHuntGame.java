@@ -1,15 +1,15 @@
-package dev.mylesmor.blockshuffle.game;
+package dev.mylesmor.blockhunt.game;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
-import dev.mylesmor.blockshuffle.data.Status;
-import dev.mylesmor.blockshuffle.util.*;
+import dev.mylesmor.blockhunt.BlockHunt;
+import dev.mylesmor.blockhunt.data.Status;
+import dev.mylesmor.blockhunt.util.*;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class BlockShuffleGame {
+public class BlockHuntGame {
 
     private Status status;
     private ArrayList<Material> blocks;
@@ -36,18 +36,18 @@ public class BlockShuffleGame {
     private ArrayList<Player> lastPlayers = new ArrayList<>();
     private final ScoreWriter scoreWriter = new ScoreWriter(this);
 
-    private BlockShuffleTimer blockShuffleTimer;
-    private BlockShuffleSoundGenerator blockShuffleSound = new BlockShuffleSoundGenerator();
+    private BlockHuntTimer blockHuntTimer;
+    private BlockHuntSoundGenerator blockShuffleSound = new BlockHuntSoundGenerator();
 
     /**
      * Constructor for creating a new game of BlockShuffle.
      *
      * @param time The time for each round.
      */
-    public BlockShuffleGame(ArrayList<Material> blocks, int time, int worldborder, ArrayList<World> worlds,
-                            Location spawnLoc, int spawnRadius, int maxNumberRounds, boolean elimination,
-                            boolean pvp, String difficulty, boolean daylightCycle, String timeOfDay,
-                            boolean hunger) {
+    public BlockHuntGame(ArrayList<Material> blocks, int time, int worldborder, ArrayList<World> worlds,
+                         Location spawnLoc, int spawnRadius, int maxNumberRounds, boolean elimination,
+                         boolean pvp, String difficulty, boolean daylightCycle, String timeOfDay,
+                         boolean hunger) {
         this.pvp = pvp;
         this.difficulty = difficulty;
         this.daylightCycle = daylightCycle;
@@ -63,7 +63,7 @@ public class BlockShuffleGame {
         this.timeEachRound = time;
         this.blocks = blocks;
         this.round = this.blockNumber;
-        this.blockShuffleTimer = new BlockShuffleTimer(this, time / 20, 1);
+        this.blockHuntTimer = new BlockHuntTimer(this, timeEachRound / 20, 1);
 
     }
 
@@ -99,21 +99,24 @@ public class BlockShuffleGame {
         return hunger;
     }
 
-    public BlockShuffleTimer getBlockShuffleTimer() {
-        return blockShuffleTimer;
+    public BlockHuntTimer getBlockHuntTimer() {
+        return blockHuntTimer;
     }
 
     /**
      * Starts a game of BlockShuffle.
      */
     public void start() {
-        BlockShuffle.scores.clear();
-        for (Player p : BlockShuffle.players.keySet()) {
-            BlockShuffle.scores.put(p, 0);
+        BlockHunt.scores.clear();
+        for (Player p : BlockHunt.players.keySet()) {
+            BlockHunt.scores.put(p, 0);
         }
         setupWorlds();
         teleportPlayers();
-        BlockShuffle.game.setStatus(Status.INGAME);
+        BlockHunt.game.setStatus(Status.INGAME);
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            BlockHunt.bossBar.addPlayer(p);
+        }
         chooseNextBlock(false);
     }
 
@@ -123,7 +126,7 @@ public class BlockShuffleGame {
     public void teleportPlayers() {
         World spawnWorld = spawnLoc.getWorld();
         Random r = new Random();
-        for (Player p : BlockShuffle.players.keySet()) {
+        for (Player p : BlockHunt.players.keySet()) {
             p.setGameMode(GameMode.SURVIVAL);
             p.setHealth(20);
             p.getInventory().clear();
@@ -175,7 +178,7 @@ public class BlockShuffleGame {
      * Chooses the next block to find.
      */
     public void chooseNextBlock(boolean skipped) {
-        blockShuffleTimer.setSpeedUpTime(1);
+        blockHuntTimer.setSpeedUpTime(1);
         blockNumber++;
         if (round > maxNumberRounds - 1) {
             endGame();
@@ -184,32 +187,32 @@ public class BlockShuffleGame {
         if (!skipped) {
             round++;
         }
-        BlockShuffle.players.replaceAll((k, v) -> v = false);
+        BlockHunt.players.replaceAll((k, v) -> v = false);
         currentBlock = blocks.get(blockNumber);
-        for (Player p : BlockShuffle.players.keySet()) {
+        for (Player p : BlockHunt.players.keySet()) {
             // Updates player scoreboard and sends the message/title
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1, 1);
             p.sendTitle(ChatColor.GRAY + "Choosing next block...", ChatColor.YELLOW + currentBlock.toString().replace("_", " "), 10, 70, 20);
             Util.blockShuffleMessage(p, ChatColor.GRAY, "Stand on " + ChatColor.YELLOW + ChatColor.BOLD + currentBlock.toString().replace("_", " ") + ChatColor.GRAY + " and type" + ChatColor.LIGHT_PURPLE + " /check", null);
         }
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!BlockShuffle.players.containsKey(p)) {
+            if (!BlockHunt.players.containsKey(p)) {
                 //TODO Add spectator scoreboard
                 Util.blockShuffleMessage(p, ChatColor.GRAY, "The players now need to find: " + ChatColor.YELLOW + ChatColor.BOLD + currentBlock.toString().replace("_", " "), null);
             }
         }
-        blockShuffleTimer.setTimeRemaining(timeEachRound / 20);
-        blockShuffleTimer.startTimer(20);
+        blockHuntTimer.setTimeRemaining(timeEachRound / 20);
+        blockHuntTimer.startTimer(20);
         checkForAllComplete();
     }
 
 
     public void checkForAllComplete() {
-        allCompleteTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockShuffle.plugin, new Runnable() {
+        allCompleteTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(BlockHunt.plugin, new Runnable() {
             @Override
             public void run() {
                 boolean allComplete = true;
-                for (boolean value : BlockShuffle.players.values()) {
+                for (boolean value : BlockHunt.players.values()) {
                     if (!value) {
                         allComplete = false;
                     }
@@ -218,16 +221,16 @@ public class BlockShuffleGame {
                     if (round > maxNumberRounds - 1) {
                         endGame();
                         Bukkit.getScheduler().cancelTask(allCompleteTask);
-                        blockShuffleTimer.cancelTimer();
+                        blockHuntTimer.cancelTimer();
                         return;
                     }
-                    blockShuffleTimer.setSpeedUpTime(4);
-                    blockShuffleTimer.cancelTimer();
+                    blockHuntTimer.setSpeedUpTime(4);
+                    blockHuntTimer.cancelTimer();
                     blockShuffleSound.startSound(Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 0.1F, 2F, 1F, 2);
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         Util.blockShuffleMessage(p, ChatColor.GRAY, "All players have found the block. Timer speed increased" + ChatColor.DARK_RED + ChatColor.BOLD + " x4.", null);
                     }
-                    blockShuffleTimer.startTimer(5);
+                    blockHuntTimer.startTimer(5);
                     Bukkit.getScheduler().cancelTask(allCompleteTask);
                 }
             }
@@ -244,12 +247,12 @@ public class BlockShuffleGame {
         Material m = p.getPlayer().getLocation().getBlock().getRelative(BlockFace.DOWN).getType();
         Material halfBlock = p.getPlayer().getLocation().getBlock().getType();
         if (m.toString().equals(matToFind.toString()) || halfBlock.toString().equals(matToFind.toString())) {
-            p.sendTitle(ChatColor.GREEN + "You've found the block!", "", 10, 70, 20);
+            p.sendTitle(ChatColor.GREEN + "Block found!", ChatColor.LIGHT_PURPLE + "+" + blockHuntTimer.getTimeRemaining() + ChatColor.GRAY + " points!", 10, 70, 20);
             p.playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1f, 1f);
-            BlockShuffle.players.replace(p, true);
-            int score = BlockShuffle.scores.get(p);
-            Util.blockShuffleMessage(p, ChatColor.GRAY, "Score " + ChatColor.LIGHT_PURPLE + "+" + blockShuffleTimer.getTimeRemaining(), null);
-            BlockShuffle.scores.replace(p, blockShuffleTimer.getTimeRemaining() + score);
+            BlockHunt.players.replace(p, true);
+            int score = BlockHunt.scores.get(p);
+            Util.blockShuffleMessage(p, ChatColor.GRAY, ChatColor.LIGHT_PURPLE + "+" + blockHuntTimer.getTimeRemaining() + ChatColor.GRAY + " points!", null);
+            BlockHunt.scores.replace(p, blockHuntTimer.getTimeRemaining() + score);
         } else {
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, 10, 0.1F);
             Util.blockShuffleMessage(p, ChatColor.RED, "That is not the correct block! " + ChatColor.GRAY
@@ -263,7 +266,7 @@ public class BlockShuffleGame {
      * Called at the end of the round, determining eliminations (if enabled) and whether the game is over.
      */
     public void eliminate() {
-        blockShuffleTimer.cancelTimer();
+        blockHuntTimer.cancelTimer();
         // Determines whether all the remaining players have failed at this block
         if (elimination) {
             if (!checkIfAllOut()) {
@@ -271,8 +274,8 @@ public class BlockShuffleGame {
                 // Eliminates players who have failed
                 checkElimination();
                 // Determine if one player remaining
-                if (BlockShuffle.players.size() == 1) {
-                    for (Map.Entry<Player, Boolean> entry : BlockShuffle.players.entrySet()) {
+                if (BlockHunt.players.size() == 1) {
+                    for (Map.Entry<Player, Boolean> entry : BlockHunt.players.entrySet()) {
                         lastPlayers.add(entry.getKey());
                     }
                     endGame();
@@ -296,12 +299,12 @@ public class BlockShuffleGame {
     private void endGame() {
         // Find player with max score
         Map.Entry<Player, Integer> maxEntry = null;
-        for (Map.Entry<Player, Integer> entry : BlockShuffle.scores.entrySet()) {
+        for (Map.Entry<Player, Integer> entry : BlockHunt.scores.entrySet()) {
             if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
                 maxEntry = entry;
             }
         }
-        for (Map.Entry<Player, Integer> entry : BlockShuffle.scores.entrySet()) {
+        for (Map.Entry<Player, Integer> entry : BlockHunt.scores.entrySet()) {
             if (!entry.equals(maxEntry)) {
                 Player player = entry.getKey();
                 if (elimination) {
@@ -315,7 +318,7 @@ public class BlockShuffleGame {
                 }
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (elimination) {
-                        Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.GOLD + player.getName() + ChatColor.RED + " has been eliminated! " + ChatColor.YELLOW + (BlockShuffle.players.size()-1) + ChatColor.GRAY + " player(s) remain.", null);
+                        Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.GOLD + player.getName() + ChatColor.RED + " has been eliminated! " + ChatColor.YELLOW + (BlockHunt.players.size()-1) + ChatColor.GRAY + " player(s) remain.", null);
                     }
                 }
             }
@@ -323,7 +326,7 @@ public class BlockShuffleGame {
         Player winner = maxEntry.getKey();
         winner.sendTitle(ChatColor.GREEN + "Winner!", "", 10, 70, 20);
         Bukkit.getScheduler().cancelTask(allCompleteTask);
-        blockShuffleTimer.cancelTimer();
+        blockHuntTimer.cancelTimer();
         winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.5f, 2f);
         winner.setGameMode(GameMode.SPECTATOR);
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -338,7 +341,7 @@ public class BlockShuffleGame {
 
 
     public void skip() {
-        blockShuffleTimer.cancelTimer();
+        blockHuntTimer.cancelTimer();
         Bukkit.getScheduler().cancelTask(allCompleteTask);
         chooseNextBlock(true);
     }
@@ -348,9 +351,12 @@ public class BlockShuffleGame {
      * Resets the game, ready for another round.
      */
     public void resetGame() {
-        BlockShuffle.game.setStatus(Status.LOBBY);
-        BlockShuffle.players.clear();
-        BlockShuffle.games = BlockShuffle.config.getGames();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            BlockHunt.bossBar.removePlayer(p);
+        }
+        BlockHunt.game.setStatus(Status.LOBBY);
+        BlockHunt.players.clear();
+        BlockHunt.games = BlockHunt.config.getGames();
         //TODO
     }
 
@@ -358,7 +364,7 @@ public class BlockShuffleGame {
      * Checks all players to verify whether should be eliminated and eliminates them.
      */
     private void checkElimination() {
-        Iterator<Map.Entry<Player, Boolean>> iter = BlockShuffle.players.entrySet().iterator();
+        Iterator<Map.Entry<Player, Boolean>> iter = BlockHunt.players.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry<Player, Boolean> entry = iter.next();
             Player player = entry.getKey();
@@ -369,7 +375,7 @@ public class BlockShuffleGame {
                 player.getWorld().strikeLightningEffect(player.getLocation());
                 player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 3, 3);
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.GOLD + player.getName() + ChatColor.RED + " has been eliminated! " + ChatColor.YELLOW + (BlockShuffle.players.size()-1) + ChatColor.GRAY + " player(s) remain.", null);
+                    Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.GOLD + player.getName() + ChatColor.RED + " has been eliminated! " + ChatColor.YELLOW + (BlockHunt.players.size()-1) + ChatColor.GRAY + " player(s) remain.", null);
                 }
                 iter.remove();
             }
@@ -382,7 +388,7 @@ public class BlockShuffleGame {
      */
     private boolean checkIfAllOut() {
         boolean allOut = true;
-        for (Map.Entry<Player, Boolean> entry : BlockShuffle.players.entrySet()) {
+        for (Map.Entry<Player, Boolean> entry : BlockHunt.players.entrySet()) {
             lastPlayers.add(entry.getKey());
             if (entry.getValue()) {
                 allOut = false;

@@ -1,6 +1,6 @@
-package dev.mylesmor.blockshuffle.listeners;
+package dev.mylesmor.blockhunt.listeners;
 
-import dev.mylesmor.blockshuffle.BlockShuffle;
+import dev.mylesmor.blockhunt.BlockHunt;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -10,15 +10,15 @@ public class JoinLeaveListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
-        if (BlockShuffle.players.containsKey(e.getPlayer())) {
+        if (BlockHunt.players.containsKey(e.getPlayer())) {
             //TODO
         }
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
-        if (BlockShuffle.players.containsKey(e.getPlayer())) {
-            BlockShuffle.board.setScoreboard(e.getPlayer());
+        if (BlockHunt.players.containsKey(e.getPlayer())) {
+            BlockHunt.board.setScoreboard(e.getPlayer());
         }
         //TODO
     }
