@@ -42,7 +42,7 @@ presets:
       spawn_radius: 10
     round_settings:
       disable_pvp: false
-      difficulty: false
+      difficulty: peaceful
       daylight_cycle: true
       time_of_day: day
       disable_hunger: false

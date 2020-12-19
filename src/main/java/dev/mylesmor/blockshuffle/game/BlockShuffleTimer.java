@@ -46,22 +46,22 @@ public class BlockShuffleTimer {
             @Override
             public void run() {
                 int finalTimeRemaining = (timeRemaining/speedUpTime)-1;
-                if (speedUpTime == 4) {
-                    finalTimeRemaining = timeRemaining/speedUpTime;
-                }
                 if (timeRemaining == 0) {
                     game.eliminate();
                     return;
                 } else if (timeRemaining == (60*speedUpTime)+1 || timeRemaining == (30*speedUpTime)+1) {
                     for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, 3);
-                        Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " seconds remaining!", null);
+                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 3, 1);
+                        if (finalTimeRemaining != 1) {
+                            Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " seconds remaining!", null);
+                        } else {
+                            Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " second remaining!", null);
+                        }
                     }
-                } else if ( timeRemaining <= (10*speedUpTime)+1 && timeRemaining % speedUpTime == 1) {
+                } else if ( timeRemaining <= (10*speedUpTime)+1 && timeRemaining % speedUpTime == 0) {
                     for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 3, 3F);
-                        if (timeRemaining - 1 != speedUpTime+1) {
-                            //TODO:
+                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 3, 1);
+                        if (finalTimeRemaining != 1) {
                             Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " seconds remaining!", null);
                         } else {
                             Util.blockShuffleMessage(p, ChatColor.RED, ChatColor.BOLD + Integer.toString(finalTimeRemaining) + ChatColor.GRAY + " second remaining!", null);

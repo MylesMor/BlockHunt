@@ -188,6 +188,7 @@ public class BlockShuffleGame {
         currentBlock = blocks.get(blockNumber);
         for (Player p : BlockShuffle.players.keySet()) {
             // Updates player scoreboard and sends the message/title
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1, 1);
             p.sendTitle(ChatColor.GRAY + "Choosing next block...", ChatColor.YELLOW + currentBlock.toString().replace("_", " "), 10, 70, 20);
             Util.blockShuffleMessage(p, ChatColor.GRAY, "Stand on " + ChatColor.YELLOW + ChatColor.BOLD + currentBlock.toString().replace("_", " ") + ChatColor.GRAY + " and type" + ChatColor.LIGHT_PURPLE + " /check", null);
         }
@@ -227,6 +228,7 @@ public class BlockShuffleGame {
                         Util.blockShuffleMessage(p, ChatColor.GRAY, "All players have found the block. Timer speed increased" + ChatColor.DARK_RED + ChatColor.BOLD + " x4.", null);
                     }
                     blockShuffleTimer.startTimer(5);
+                    Bukkit.getScheduler().cancelTask(allCompleteTask);
                 }
             }
         }, 0, 2);
@@ -249,7 +251,7 @@ public class BlockShuffleGame {
             Util.blockShuffleMessage(p, ChatColor.GRAY, "Score " + ChatColor.LIGHT_PURPLE + "+" + blockShuffleTimer.getTimeRemaining(), null);
             BlockShuffle.scores.replace(p, blockShuffleTimer.getTimeRemaining() + score);
         } else {
-            p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_BREAK, 10, 3);
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, 10, 0.1F);
             Util.blockShuffleMessage(p, ChatColor.RED, "That is not the correct block! " + ChatColor.GRAY
                     + "You are standing on " + ChatColor.RED + m.toString().replace("_", " ")
                     + ChatColor.GRAY + ". You need to stand on: " + ChatColor.YELLOW + ChatColor.BOLD
@@ -276,12 +278,14 @@ public class BlockShuffleGame {
                     endGame();
                 } else {
                     // Continue the game
+                    Bukkit.getScheduler().cancelTask(allCompleteTask);
                     chooseNextBlock(false);
                 }
             } else {
                 endGame();
             }
         } else {
+            Bukkit.getScheduler().cancelTask(allCompleteTask);
             chooseNextBlock(false);
         }
     }
@@ -319,9 +323,13 @@ public class BlockShuffleGame {
         Player winner = maxEntry.getKey();
         winner.sendTitle(ChatColor.GREEN + "Winner!", "", 10, 70, 20);
         Bukkit.getScheduler().cancelTask(allCompleteTask);
+        blockShuffleTimer.cancelTimer();
         winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.5f, 2f);
         winner.setGameMode(GameMode.SPECTATOR);
         for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!p.equals(winner)) {
+                p.playSound(p.getLocation(), Sound.ENTITY_WOLF_WHINE, 1, 1);
+            }
             Util.blockShuffleMessage(p, ChatColor.GRAY, "The game is now over! " + ChatColor.GREEN + "Winner: %NAME%", winner.getName());
         }
         scoreWriter.saveScores();
