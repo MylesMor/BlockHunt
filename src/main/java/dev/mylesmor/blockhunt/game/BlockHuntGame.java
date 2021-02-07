@@ -164,7 +164,6 @@ public class BlockHuntGame {
             if (difficulty.equalsIgnoreCase("peaceful")) {
                 w.setDifficulty(Difficulty.PEACEFUL);
                 w.setGameRule(GameRule.DO_MOB_SPAWNING, false);
-                w.setDifficulty(Difficulty.EASY);
             } else {
                 w.setDifficulty(Difficulty.valueOf(difficulty.toUpperCase()));
             }
@@ -333,12 +332,45 @@ public class BlockHuntGame {
             if (!p.equals(winner)) {
                 p.playSound(p.getLocation(), Sound.ENTITY_WOLF_WHINE, 1, 1);
             }
-            Util.blockShuffleMessage(p, ChatColor.GRAY, "The game is now over! " + ChatColor.GREEN + "Winner: %NAME%", winner.getName());
+            Util.blockShuffleMessage(p, ChatColor.GRAY, "The game is now over!", null);
         }
+        displayScoreboard();
         scoreWriter.saveScores();
         resetGame();
     }
 
+
+    private void displayScoreboard() {
+        ArrayList<Map.Entry<Player, Integer>> scores = new ArrayList<>();
+        scores.addAll(BlockHunt.scores.entrySet());
+        Comparator<Map.Entry<Player, Integer>> comparator =
+                (e1, e2) -> {
+                    Integer int1 = e1.getValue();
+                    Integer int2 = e2.getValue();
+                    return int1.compareTo(int2);
+                };
+        scores.sort(comparator);
+        Collections.reverse(scores);
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.sendMessage(ChatColor.GRAY + "======== " + ChatColor.GOLD + ChatColor.BOLD + " Scores "
+                    + ChatColor.RESET + ChatColor.GRAY + " ========");
+            for (int i = 0; i < Math.min(scores.size(), 10); i++) {
+                p.sendMessage("" + ChatColor.YELLOW + ChatColor.BOLD + (i+1) + ". " + ChatColor.RESET + ChatColor.GRAY + scores.get(i).getKey().getName() + " - " + ChatColor.LIGHT_PURPLE + scores.get(i).getValue());
+            }
+            if (BlockHunt.scores.containsKey(p)) {
+                int place = 1;
+                for (Map.Entry<Player, Integer> entry : scores) {
+                    if (!entry.getKey().equals(p)) {
+                        place += 1;
+                    } else {
+                        break;
+                    }
+                }
+                String placeString = Util.ordinal(place);
+                p.sendMessage("" + ChatColor.BOLD + ChatColor.GRAY + "You placed " + ChatColor.GREEN + ChatColor.BOLD + placeString + ChatColor.RESET + ChatColor.GRAY + "!" );
+            }
+        }
+    }
 
     public void skip() {
         blockHuntTimer.cancelTimer();

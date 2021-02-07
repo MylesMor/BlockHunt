@@ -26,8 +26,9 @@ public class ScoreWriter {
      * Writes the scores at the end of a game to scores.csv in the BlockShuffle plugin folder.
      */
     public void saveScores() {
+        long seconds = Instant.now().getEpochSecond();
         try {
-            File file = new File(BlockHunt.plugin.getDataFolder() + "/scores" + Instant.now().getEpochSecond() + ".csv");
+            File file = new File(BlockHunt.plugin.getDataFolder() + "/scores" + seconds + ".csv");
             if (file.createNewFile()) {
                 Bukkit.getLogger().info("[BLOCKSHUFFLE] File created: " + file.getName());
             }
@@ -35,7 +36,7 @@ public class ScoreWriter {
             Bukkit.getLogger().warning("[BLOCKSHUFFLE] An error occurred whilst creating scores.csv!");
             e.printStackTrace();
         }
-        File file = new File(BlockHunt.plugin.getDataFolder() + "/scores.csv");
+        File file = new File(BlockHunt.plugin.getDataFolder() + "/scores" + seconds + ".csv");
         if (file.exists()) {
             ArrayList<String> lines = convertScores();
             try {

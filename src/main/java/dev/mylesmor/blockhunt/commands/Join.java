@@ -16,6 +16,12 @@ public class Join {
      */
     public static void join(Player p, String[] args) {
         if (p.hasPermission(Permissions.JOIN)) {
+            if (BlockHunt.game != null) {
+                if (BlockHunt.game.getStatus() == Status.INGAME) {
+                    Util.blockShuffleMessage(p, ChatColor.RED, "This game has already started!", null);
+                    return;
+                }
+            }
             if (!BlockHunt.players.containsKey(p)) {
                 BlockHunt.players.put(p, false);
                 BlockHunt.board.destroySingular(p);
@@ -26,10 +32,6 @@ public class Join {
             } else {
                 if (BlockHunt.players.containsKey(p)) {
                     Util.blockShuffleMessage(p, ChatColor.RED, "You are already in a game!", null);
-                } else {
-                    if (BlockHunt.game.getStatus() == Status.INGAME) {
-                        Util.blockShuffleMessage(p, ChatColor.RED, "Sorry, you're already out!", null);
-                    }
                 }
             }
         } else {
